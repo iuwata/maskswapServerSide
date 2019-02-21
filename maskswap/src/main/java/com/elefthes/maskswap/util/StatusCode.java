@@ -4,10 +4,9 @@ public enum StatusCode {
     Failure(0),
     Success(1),
     NeedToLogin(2),
-    IncompleteForm(3),
-    emailAlreadyExist(4),
-    IncompleteEmail(5),
-    IncompletePassword(6);
+    emailAlreadyExist(3),
+    IncompleteEmail(4),
+    IncompletePassword(5);
     
     private int id;
     
