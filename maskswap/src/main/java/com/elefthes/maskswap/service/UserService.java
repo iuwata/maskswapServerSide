@@ -41,6 +41,10 @@ public class UserService {
         }
     }
     
+    public boolean CanLogin(String email, String password) {
+        
+    }
+    
     @Transactional
     public StatusCode create(String email, String password) throws NoSuchAlgorithmException {
         //パスワードが使用可能か判定
