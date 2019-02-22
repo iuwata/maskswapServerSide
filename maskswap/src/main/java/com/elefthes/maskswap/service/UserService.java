@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -20,6 +21,12 @@ public class UserService {
     private EntityManager entityManager;
     
     public static final int VERSION = 1;
+    
+    public UsersEntity getUser(String email) {
+        UsersEntity result = entityManager.createNamedQuery("Users.byEmail", UsersEntity.class)
+                                    .setParameter("email", email).getSingleResult();
+        return result;
+    }
     
     public boolean checkSaltOverlap(String salt) {
         List<UsersEntity> result = entityManager.createNamedQuery("Users.bySalt", UsersEntity.class)
@@ -34,15 +41,25 @@ public class UserService {
             if(result.size() == 0) {    //すでに存在しているか判定
                 return StatusCode.Success;
             } else {
-                return StatusCode.emailAlreadyExist;
+                return StatusCode.EmailAlreadyExist;
             }
         } else {
             return StatusCode.IncompleteEmail;
         }
     }
     
-    public boolean CanLogin(String email, String password) {
-        
+    public StatusCode canLogin(String email, String password) {
+        try {
+            UsersEntity result = entityManager.createNamedQuery("Users.byEmail", UsersEntity.class)
+                                                    .setParameter("email", email).getSingleResult();
+            if(SafePassword.getStretchedPassword(password, result.getSalt()).equals(result.getPassword())) {
+                return StatusCode.Success;
+            } else {
+                return StatusCode.PasswordIsIncorrect;
+            }
+        } catch (NoResultException e) {
+            return StatusCode.EmailDoesNotExist;
+        }
     }
     
     @Transactional
@@ -53,12 +70,12 @@ public class UserService {
         }
         //emailが使用可能か判定
         switch(EmailAvailable(email)) {
-            case emailAlreadyExist:
+            case EmailAlreadyExist:
                 //emailが既に存在
-                return StatusCode.emailAlreadyExist;
+                return StatusCode.EmailAlreadyExist;
             case IncompleteEmail: 
                 //メールアドレスではない
-                return StatusCode.emailAlreadyExist;
+                return StatusCode.EmailAlreadyExist;
         }
         
         //パスワードの暗号化
