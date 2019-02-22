@@ -33,7 +33,6 @@ public class Login {
         String password = requestData.getPassword();
         
         StatusResponse responseData = new StatusResponse();
-        Gson gson = new Gson();
         
         StatusCode result = userService.canLogin(email, password);
         if(result == StatusCode.Success) {
@@ -46,6 +45,21 @@ public class Login {
         } else {
             responseData.setResult(StatusCode.Failure);
         }
+        Gson gson = new Gson();
+        return gson.toJson(responseData);
+    }
+    
+    @POST
+    @Path("check")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String checkLogin(@Context HttpServletRequest req) {
+        StatusResponse responseData = new StatusResponse();
+        if(SessionManager.hasSession(req)) {
+            responseData.setResult(StatusCode.Success);
+        } else {
+            responseData.setResult(StatusCode.Failure);
+        }
+        Gson gson = new Gson();
         return gson.toJson(responseData);
     }
 }
