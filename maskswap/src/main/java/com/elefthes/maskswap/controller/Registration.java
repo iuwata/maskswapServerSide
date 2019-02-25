@@ -7,6 +7,7 @@ import com.elefthes.maskswap.util.SendMail;
 import com.elefthes.maskswap.util.StatusCode;
 import com.google.gson.Gson;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -26,17 +27,22 @@ public class Registration {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String registrationOnWeb(RegistrationRequest requestData) throws NoSuchAlgorithmException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Registration");
         String password = requestData.getPassword();
         String email = requestData.getEmail();
+        logger.info(email);
         
         Gson gson = new Gson();
         StatusResponse responseData = new StatusResponse();
         
+        logger.info("Registration.P1");
         StatusCode result = userService.create(email, password);
         if(result == StatusCode.Success) {
+            logger.info("Registration.P2");
             SendMail sendMail = new SendMail();
             sendMail.send(email, "MaskSwapメールアドレス認証", "ご登録ありがとうございます");
         }
+        logger.info("Rigistration.P3");
         responseData.setResult(result);
         return gson.toJson(responseData);
     }
