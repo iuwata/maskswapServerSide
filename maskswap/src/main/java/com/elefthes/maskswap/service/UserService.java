@@ -1,6 +1,7 @@
 package com.elefthes.maskswap.service;
 
 import com.elefthes.maskswap.entity.UsersEntity;
+import com.elefthes.maskswap.exception.CustomException;
 import com.elefthes.maskswap.util.EmailAddressChecker;
 import com.elefthes.maskswap.util.PasswordChecker;
 import com.elefthes.maskswap.util.SafePassword;
@@ -28,10 +29,41 @@ public class UserService {
         return result;
     }
     
+    public UsersEntity getUser(long userId) { 
+        UsersEntity result = entityManager.createNamedQuery("Users.byId", UsersEntity.class)
+                                    .setParameter("userId", userId).getSingleResult();
+        return result;
+    }
+    
     public boolean checkSaltOverlap(String salt) {
         List<UsersEntity> result = entityManager.createNamedQuery("Users.bySalt", UsersEntity.class)
                                             .setParameter("salt", salt).getResultList();
         return result.size() == 0;
+    }
+    
+    @Transactional
+    public void authenticateEmail(long userId, String authenticationCode) throws CustomException{
+        UsersEntity user = this.getUser(userId);
+        
+        //認証済みかどうかを確認
+        if(user.getAuthentication()) {
+            throw new CustomException(StatusCode.EmailAlreadyAuthenticated);
+        }
+        
+        int limitDay = 1; //認証期限(日)
+        //認証制限を確認
+        if((user.getStart_date().getTime() - System.currentTimeMillis()) > (limitDay * 24 * 60 * 60 * 1000)) {
+            throw new CustomException(StatusCode.EmailAuthenticationExpired);
+        }
+        
+        //認証コードを確認
+        if(user.getAuthenticationCode() == authenticationCode) {
+            user.setAuthentication(true);
+            entityManager.persist(user);
+            entityManager.flush();
+        } else {
+            throw new CustomException(StatusCode.IncorrectAuthenticationCode);
+        }
     }
     
     public StatusCode EmailAvailable(String email) {
@@ -48,34 +80,34 @@ public class UserService {
         }
     }
     
-    public StatusCode canLogin(String email, String password) {
+    public boolean login(String email, String password) {
         try {
             UsersEntity result = entityManager.createNamedQuery("Users.byEmail", UsersEntity.class)
                                                     .setParameter("email", email).getSingleResult();
             if(SafePassword.getStretchedPassword(password, result.getSalt()).equals(result.getPassword())) {
-                return StatusCode.Success;
+                return true;
             } else {
-                return StatusCode.PasswordIsIncorrect;
+                return false;
             }
         } catch (NoResultException e) {
-            return StatusCode.EmailDoesNotExist;
+            return false;
         }
     }
     
     @Transactional
-    public StatusCode create(String email, String password) throws NoSuchAlgorithmException {
+    public void create(String email, String password) throws NoSuchAlgorithmException, CustomException{
         //パスワードが使用可能か判定
         if(!PasswordChecker.isPasswordAvailable(password)) { //使用不可能の場合
-            return StatusCode.IncompletePassword;
+            throw new CustomException(StatusCode.IncompletePassword);
         }
         //emailが使用可能か判定
         switch(EmailAvailable(email)) {
             case EmailAlreadyExist:
                 //emailが既に存在
-                return StatusCode.EmailAlreadyExist;
+                throw new CustomException(StatusCode.EmailAlreadyExist);
             case IncompleteEmail: 
                 //メールアドレスではない
-                return StatusCode.EmailAlreadyExist;
+                throw new CustomException(StatusCode.IncompleteEmail);
         }
         
         //パスワードの暗号化
@@ -90,19 +122,17 @@ public class UserService {
         Timestamp startDate = new Timestamp(System.currentTimeMillis());
         
         //認証コードを生成
-        String verificationCode = RandomStringUtils.randomAlphanumeric(4);
+        String authenticationCode = RandomStringUtils.randomAlphanumeric(4);
         
         UsersEntity user = new UsersEntity();
         //データを追加
         user.setEmail(email);
         user.setPassword(securePassword);
         user.setSalt(salt);
-        user.setVerificationCode(verificationCode);
+        user.setAuthenticationCode(authenticationCode);
         user.setStart_date(startDate);
         
         entityManager.persist(user);
         entityManager.flush();
-        
-        return StatusCode.Success;
     }
 }

@@ -34,10 +34,11 @@ public class Login {
         
         StatusResponse responseData = new StatusResponse();
         
-        StatusCode result = userService.canLogin(email, password);
-        if(result == StatusCode.Success) {
+        boolean result = userService.login(email, password);
+        if(result == true) {
             long userId = userService.getUser(email).getUserId();
             int intervalSec = 3600 * 24 * 7;
+            //セッション開始
             SessionManager.beginSession(req, res, intervalSec, true);
             HttpSession session = req.getSession(false);
             session.setAttribute("userId", userId);

@@ -14,35 +14,39 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "users")
 @NamedQueries({
-    @NamedQuery(name = "Users.byEmail", query = "SELECT u FROM UsersEntity u WHERE u.email = :email"),
+    @NamedQuery(name = "Users.byEmail", query = "SELECT u FROM UsersEntity u WHERE u.email = :email")
+    ,
     @NamedQuery(name = "Users.bySalt", query = "SELECT u FROM UsersEntity u WHERE u.salt = :salt")
+    ,
+    @NamedQuery(name = "Users.byId", query = "SELECT u FROM UsersEntity u WHERE u.userId = :userId")
 })
-public class UsersEntity implements Serializable{
+public class UsersEntity implements Serializable {
+
     private static final long serialVersionUID = 1L;
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private long userId;
-    
+
     @Column(name = "email")
     private String email;
-    
+
     @Column(name = "password")
     private String password;
-    
+
     @Column(name = "salt")
     private String salt;
-    
-    @Column(name = "verification_code")
-    private String verificationCode;
-    
-    @Column(name = "verification")
-    private boolean verification;
-    
+
+    @Column(name = "authentication_code")
+    private String authenticationCode;
+
+    @Column(name = "authentication")
+    private boolean authentication;
+
     @Column(name = "version")
     private int version;
-    
+
     @Column(name = "start_date")
     private Timestamp start_date;
 
@@ -61,7 +65,7 @@ public class UsersEntity implements Serializable{
     public void setEmail(String email) {
         this.email = email;
     }
-    
+
     public String getPassword() {
         return password;
     }
@@ -78,20 +82,20 @@ public class UsersEntity implements Serializable{
         this.salt = salt;
     }
 
-    public String getVerificationCode() {
-        return verificationCode;
+    public String getAuthenticationCode() {
+        return authenticationCode;
     }
 
-    public void setVerificationCode(String verificationCode) {
-        this.verificationCode = verificationCode;
+    public void setAuthenticationCode(String authenticationCode) {
+        this.authenticationCode = authenticationCode;
     }
 
-    public boolean getVerification() {
-        return verification;
+    public boolean getAuthentication() {
+        return authentication;
     }
 
-    public void setVerification(boolean verification) {
-        this.verification = verification;
+    public void setAuthentication(boolean authentication) {
+        this.authentication = authentication;
     }
 
     public Timestamp getStart_date() {
@@ -109,6 +113,5 @@ public class UsersEntity implements Serializable{
     public void setVersion(int version) {
         this.version = version;
     }
-    
-    
+
 }

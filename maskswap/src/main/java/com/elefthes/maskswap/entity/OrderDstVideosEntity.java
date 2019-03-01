@@ -1,28 +1,42 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package com.elefthes.maskswap.entity;
 
+import com.elefthes.maskswap.entity.id.OrderVideoId;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "order_videos")
-public class OrderVideosEntity implements Serializable{
-    private static final long serialVersionUID = 1L;
+@Table(name = "order_dst_videos")
+@IdClass(OrderVideoId.class)
+public class OrderDstVideosEntity implements Serializable{
+   private static final long serialVersionUID = 1L;
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id")
     private long orderId;
     
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
-    private UsersEntity user;
+    @Id
+    @Column(name = "storage_order")
+    private int storageOrder;
+    
+    //@ManyToOne
+    //@JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    //private UsersEntity user;
+    @Column(name = "user_id")
+    private long userId;
     
     @Column(name = "video")
     private byte[] video;
@@ -38,12 +52,29 @@ public class OrderVideosEntity implements Serializable{
         this.orderId = orderId;
     }
 
-    public UsersEntity getUser() {
+    public int getStorageOrder() {
+        return storageOrder;
+    }
+
+    public void setStorageOrder(int storageOrder) {
+        this.storageOrder = storageOrder;
+    }
+
+/*    public UsersEntity getUser() {
         return user;
     }
 
     public void setUser(UsersEntity user) {
         this.user = user;
+    }
+*/
+    
+    public void setUserId(long userId) {
+        this.userId = userId;
+    }
+
+    public long getUserId() {
+        return userId;
     }
 
     public byte[] getVideo() {
@@ -60,5 +91,5 @@ public class OrderVideosEntity implements Serializable{
 
     public void setSize(int size) {
         this.size = size;
-    }
+    } 
 }

@@ -41,7 +41,7 @@ public class SendMail {
         props.setProperty("mail.smtps.timeout", "30000");
         props.setProperty("mail.smtps.starttls.enable", "true");
         props.setProperty("mail.debug", "true");*/
-        //props.setProperty("mail.smtp.host", "s11.coreserver.jp"); //SMTP
+        //props.setProperty("mail.smtp.host", "elefthes.com"); //SMTP
         props.setProperty("mail.smtp.host", "202.172.28.12");
         //props.setProperty("mail.smtp.host", "smtp.gmail.com");
         props.setProperty("mail.smtp.port", "587"); //SMTPポート

@@ -2,6 +2,7 @@ package com.elefthes.maskswap.controller;
 
 import com.elefthes.maskswap.dto.request.RegistrationRequest;
 import com.elefthes.maskswap.dto.response.StatusResponse;
+import com.elefthes.maskswap.exception.CustomException;
 import com.elefthes.maskswap.service.UserService;
 import com.elefthes.maskswap.util.SendMail;
 import com.elefthes.maskswap.util.StatusCode;
@@ -34,16 +35,18 @@ public class Registration {
         
         Gson gson = new Gson();
         StatusResponse responseData = new StatusResponse();
-        
-        logger.info("Registration.P1");
-        StatusCode result = userService.create(email, password);
-        if(result == StatusCode.Success) {
+        try {
+            logger.info("Registration.P1");
+            userService.create(email, password);
             logger.info("Registration.P2");
             SendMail sendMail = new SendMail();
             sendMail.send(email, "MaskSwapメールアドレス認証", "ご登録ありがとうございます");
+            logger.info("Rigistration.P3");
+            responseData.setResult(StatusCode.Success);
+        } catch(CustomException e) {
+            responseData.setResult(e.getCode());
         }
-        logger.info("Rigistration.P3");
-        responseData.setResult(result);
+        
         return gson.toJson(responseData);
     }
 }

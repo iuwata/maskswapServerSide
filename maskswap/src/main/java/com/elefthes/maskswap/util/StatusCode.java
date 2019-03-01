@@ -3,12 +3,17 @@ package com.elefthes.maskswap.util;
 public enum StatusCode {
     Failure(0),
     Success(1),
-    NeedToLogin(2),
+    NeedLogin(2),
     EmailAlreadyExist(3),
     IncompleteEmail(4),
     IncompletePassword(5),
     EmailDoesNotExist(6),
-    PasswordIsIncorrect(7);
+    IncorrectPassword(7),
+    EmailAlreadyAuthenticated(8),
+    EmailAuthenticationExpired(9),
+    IncorrectAuthenticationCode(10),
+    NoSrcVideo(11),
+    NoDstVideo(12);
     
     
     private int id;
