@@ -1,5 +1,7 @@
 package com.elefthes.maskswap;
 
+import com.elefthes.maskswap.controller.AuthenticateEmail;
+import com.elefthes.maskswap.controller.Conversion;
 import com.elefthes.maskswap.controller.Login;
 import com.elefthes.maskswap.controller.Registration;
 import java.util.HashSet;
@@ -14,6 +16,8 @@ public class AppConfig extends Application {
         Set<Class<?>> s = new HashSet<>();
         s.add(Login.class);
         s.add(Registration.class);
+        s.add(AuthenticateEmail.class);
+        s.add(Conversion.class);
         return s;
     }
 }

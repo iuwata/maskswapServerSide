@@ -7,6 +7,7 @@ import com.elefthes.maskswap.util.SessionManager;
 import com.elefthes.maskswap.util.StatusCode;
 import com.google.gson.Gson;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -29,6 +30,10 @@ public class Login {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String loginOnWeb(LoginRequest requestData, @Context HttpServletResponse res, @Context HttpServletRequest req) throws NoSuchAlgorithmException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Login");
+        logger.info("ServerName : " + req.getServerName());
+        logger.info("RemoteAddr : " + req.getRemoteAddr());
+        logger.info("RemoteHost : " + req.getRemoteHost());
         String email = requestData.getEmail();
         String password = requestData.getPassword();
         

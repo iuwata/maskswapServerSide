@@ -37,11 +37,11 @@ public class OrderService {
         
         entityManager.persist(order);
         entityManager.flush();
-        
+        logger.info("Conversion4");
         long orderId = order.getOrderId();
         
         orderVideoService.uploadVideo(srcFile, dstFile, orderId, userId);
-        
+        logger.info("Conversion5");
         return orderId;
     }
 }
