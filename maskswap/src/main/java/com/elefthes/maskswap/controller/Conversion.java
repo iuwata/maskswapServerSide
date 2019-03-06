@@ -34,7 +34,6 @@ public class Conversion {
     @Path("order")
     @Consumes(MediaType.MULTIPART_FORM_DATA) 
     @Produces(MediaType.APPLICATION_JSON)
-    //public String orderConversion(OrderConversionRequest requestData, @Context HttpServletRequest req) {
     public String orderConversion(@FormDataParam("token") String token, 
                                   @FormDataParam("srcFile") InputStream srcFile,
                                   @FormDataParam("dstFile") InputStream dstFile,
@@ -103,4 +102,20 @@ public class Conversion {
         
         return gson.toJson(responseData);
     }
+    
+    /*@POST
+    @Path("status")
+    @Produces(MediaType.APPLICATION_JSON) 
+    public String conversionStatus(@Context HttpServletRequest req) {
+        //トークンチェック
+            HttpSession session = req.getSession(false);
+            if(session == null) {
+                logger.info("セッションが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            if(!(session.getAttribute("token").equals(token))){
+                logger.info("トークンが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+    }*/
 }

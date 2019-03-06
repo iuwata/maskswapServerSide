@@ -20,9 +20,6 @@ public class OrderVideoService {
     @PersistenceContext(unitName = "maskswapGeneral")
     private EntityManager entityManager;  
     
-    //@Inject 
-    //UserService userService;
-    
     @Transactional
     public void uploadVideo(InputStream srcFile, 
                                   InputStream dstFile, 
@@ -35,13 +32,6 @@ public class OrderVideoService {
         
         //srcファイルをアップロード
         for(int i = 0; true; i++) {
-            //byte[] buffer = new byte[maxByte]; //128kb
-            //size = srcFile.read(buffer, 0, buffer.length);
-            /*if(size == -1) {
-                logger.info("動画書き込み終了 番号:" + i);
-                //srcInputStream.close();
-                break;
-            } else {*/
             byte[] buffer = StreamConvert.getBytes(srcFile, maxLength);
             logger.info("src動画サイズ" + i + " : " + buffer.length);
             OrderSrcVideosEntity orderSrcVideo = new OrderSrcVideosEntity();
@@ -54,7 +44,6 @@ public class OrderVideoService {
             entityManager.persist(orderSrcVideo);
             entityManager.flush();
             entityManager.clear();
-            //}
             
             if(buffer.length != maxLength) {
                 logger.info("src動画書き込み終了 番号:" + i);
@@ -64,13 +53,6 @@ public class OrderVideoService {
         
         //dstファイルをアップロード
         for(int i = 0; true; i++) {
-            //byte[] buffer = new byte[maxByte];
-            //size = dstInputStream.read(buffer, 0, buffer.length);
-            /*if(size == -1) {
-                logger.info("動画書き込み終了 番号:" + i);
-                //dstInputStream.close();
-                break;
-            } else {*/
             byte[] buffer = StreamConvert.getBytes(dstFile, maxLength);
             logger.info("dst動画サイズ" + i + " : " + buffer.length);
             OrderDstVideosEntity orderDstVideo = new OrderDstVideosEntity();
@@ -83,7 +65,6 @@ public class OrderVideoService {
             entityManager.persist(orderDstVideo);
             entityManager.flush();
             entityManager.clear();
-            //}
             
             if(buffer.length != maxLength) {
                 logger.info("dst動画書き込み終了 番号:" + i);

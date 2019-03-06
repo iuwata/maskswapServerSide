@@ -9,10 +9,15 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "orders")
+@NamedQueries({
+    @NamedQuery(name = "Orders.byId", query = "SELECT o From OrdersEntity o WHERE o.userId = :userId")
+})
 public class OrdersEntity implements Serializable{
     private static final long serialVersionUID = 1L;
     
@@ -21,9 +26,11 @@ public class OrdersEntity implements Serializable{
     @Column(name = "order_id")
     private long orderId;
     
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
-    private UsersEntity user;
+    //@ManyToOne
+    //@JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    @Column(name = "user_id")
+    //private UsersEntity user;
+    long userId;
     
     @Column(name = "progress")
     private int progress;
@@ -45,12 +52,20 @@ public class OrdersEntity implements Serializable{
         this.orderId = orderId;
     }
 
-    public UsersEntity getUser() {
+    /*public UsersEntity getUser() {
         return user;
     }
 
     public void setUser(UsersEntity user) {
         this.user = user;
+    }*/
+
+    public long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(long userId) {
+        this.userId = userId;
     }
 
     public int getProgress() {

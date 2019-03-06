@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -25,16 +26,23 @@ public class OrderService {
     @Inject 
     OrderVideoService orderVideoService;
     
+    
+    public List<OrdersEntity> getOrders(long userId) {
+        List<OrdersEntity> result = entityManager.createNamedQuery("Orders.byId", OrdersEntity.class)
+                                            .setParameter("userId", userId).getResultList();
+        return result;
+    }
+    
+    
     @Transactional
     public long create(InputStream srcFile, 
                              InputStream dstFile, 
                              long userId) throws IOException, RuntimeException {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.OrderService");
         
-        //byte[] buf = new byte[8];
-        //logger.info("１回目抽出" + Integer.toString(requestData.getSrcFile().read(buf, 0, buf.length)));
         OrdersEntity order = new OrdersEntity();
-        order.setUser(userService.getUser(userId));
+        //order.setUser(userService.getUser(userId));
+        order.setUserId(userId);
         order.setProgress(0);
         order.setOrderDate(new Timestamp(System.currentTimeMillis()));
         order.setIsFree(true);
@@ -48,4 +56,5 @@ public class OrderService {
         logger.info("Conversion5");
         return orderId;
     }
+    
 }
