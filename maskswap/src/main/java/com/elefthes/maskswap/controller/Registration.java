@@ -37,10 +37,14 @@ public class Registration {
         StatusResponse responseData = new StatusResponse();
         try {
             logger.info("Registration.P1");
-            userService.create(email, password);
+            long userId = userService.create(email, password);
             logger.info("Registration.P2");
             SendMail sendMail = new SendMail();
-            sendMail.send(email, "MaskSwapメールアドレス認証", "ご登録ありがとうございます");
+            StringBuilder mailText = new StringBuilder();
+            mailText.append("MaskSwapアカウントにご登録ありがとうございます。下記のURLよりメールアドレスの認証をお願いいたします。");
+            mailText.append("\r\n");
+            mailText.append("http://");
+            sendMail.send(email, "MaskSwapメールアドレス認証", mailText.toString());
             logger.info("Rigistration.P3");
             responseData.setResult(StatusCode.Success);
         } catch(CustomException e) {

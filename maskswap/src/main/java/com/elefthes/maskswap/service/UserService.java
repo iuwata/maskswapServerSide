@@ -95,7 +95,7 @@ public class UserService {
     }
     
     @Transactional
-    public void create(String email, String password) throws NoSuchAlgorithmException, CustomException{
+    public long create(String email, String password) throws NoSuchAlgorithmException, CustomException{
         //パスワードが使用可能か判定
         if(!PasswordChecker.isPasswordAvailable(password)) { //使用不可能の場合
             throw new CustomException(StatusCode.IncompletePassword);
@@ -134,5 +134,7 @@ public class UserService {
         
         entityManager.persist(user);
         entityManager.flush();
+        
+        return user.getUserId();
     }
 }

@@ -3,9 +3,11 @@ package com.elefthes.maskswap.service;
 import com.elefthes.maskswap.entity.OrderDstVideosEntity;
 import com.elefthes.maskswap.entity.OrderSrcVideosEntity;
 import com.elefthes.maskswap.util.StatusCode;
+import com.elefthes.maskswap.util.StreamConvert;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -18,59 +20,74 @@ public class OrderVideoService {
     @PersistenceContext(unitName = "maskswapGeneral")
     private EntityManager entityManager;  
     
-    @Inject 
-    UserService userService;
+    //@Inject 
+    //UserService userService;
     
     @Transactional
-    public void uploadVideo(ByteArrayInputStream srcFile, 
-                                  ByteArrayInputStream dstFile, 
+    public void uploadVideo(InputStream srcFile, 
+                                  InputStream dstFile, 
                                   long orderId, 
                                   long userId) throws IOException, RuntimeException{
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.OrderVideoService");
         
+        //int size;
+        int maxLength = 1024 * 128;
+        
         //srcファイルをアップロード
-        BufferedInputStream srcInputStream = new BufferedInputStream(srcFile);
-        int size;
-        int maxByte = 1024 * 128;
         for(int i = 0; true; i++) {
-            byte[] buffer = new byte[maxByte]; //128kb
-            size = srcInputStream.read(buffer, 0, buffer.length);
-            if(size == -1) {
-                srcInputStream.close();
+            //byte[] buffer = new byte[maxByte]; //128kb
+            //size = srcFile.read(buffer, 0, buffer.length);
+            /*if(size == -1) {
+                logger.info("動画書き込み終了 番号:" + i);
+                //srcInputStream.close();
                 break;
-            } else {
-                OrderSrcVideosEntity orderSrcVideo = new OrderSrcVideosEntity();
-                orderSrcVideo.setOrderId(orderId);
-                orderSrcVideo.setUserId(userId);
-                orderSrcVideo.setSize(size);
-                orderSrcVideo.setStorageOrder(i);
-                orderSrcVideo.setVideo(buffer);
-                
-                entityManager.persist(orderSrcVideo);
-                entityManager.flush();
-                entityManager.clear();
+            } else {*/
+            byte[] buffer = StreamConvert.getBytes(srcFile, maxLength);
+            logger.info("src動画サイズ" + i + " : " + buffer.length);
+            OrderSrcVideosEntity orderSrcVideo = new OrderSrcVideosEntity();
+            orderSrcVideo.setOrderId(orderId);
+            orderSrcVideo.setUserId(userId);
+            orderSrcVideo.setSize(buffer.length);
+            orderSrcVideo.setStorageOrder(i);
+            orderSrcVideo.setVideo(buffer);
+            
+            entityManager.persist(orderSrcVideo);
+            entityManager.flush();
+            entityManager.clear();
+            //}
+            
+            if(buffer.length != maxLength) {
+                logger.info("src動画書き込み終了 番号:" + i);
+                break;
             }
         }
         
         //dstファイルをアップロード
-        BufferedInputStream dstInputStream = new BufferedInputStream(dstFile);
         for(int i = 0; true; i++) {
-            byte[] buffer = new byte[maxByte];
-            size = dstInputStream.read(buffer, 0, buffer.length);
-            if(size == -1) {
-                dstInputStream.close();
+            //byte[] buffer = new byte[maxByte];
+            //size = dstInputStream.read(buffer, 0, buffer.length);
+            /*if(size == -1) {
+                logger.info("動画書き込み終了 番号:" + i);
+                //dstInputStream.close();
                 break;
-            } else {
-                OrderDstVideosEntity orderDstVideo = new OrderDstVideosEntity();
-                orderDstVideo.setOrderId(orderId);
-                orderDstVideo.setUserId(userId);
-                orderDstVideo.setSize(size);
-                orderDstVideo.setStorageOrder(i);
-                orderDstVideo.setVideo(buffer);
-                
-                entityManager.persist(orderDstVideo);
-                entityManager.flush();
-                entityManager.clear();
+            } else {*/
+            byte[] buffer = StreamConvert.getBytes(dstFile, maxLength);
+            logger.info("dst動画サイズ" + i + " : " + buffer.length);
+            OrderDstVideosEntity orderDstVideo = new OrderDstVideosEntity();
+            orderDstVideo.setOrderId(orderId);
+            orderDstVideo.setUserId(userId);
+            orderDstVideo.setSize(buffer.length);
+            orderDstVideo.setStorageOrder(i);
+            orderDstVideo.setVideo(buffer);
+            
+            entityManager.persist(orderDstVideo);
+            entityManager.flush();
+            entityManager.clear();
+            //}
+            
+            if(buffer.length != maxLength) {
+                logger.info("dst動画書き込み終了 番号:" + i);
+                break;
             }
         }
     }

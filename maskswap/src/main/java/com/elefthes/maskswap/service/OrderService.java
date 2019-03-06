@@ -1,9 +1,11 @@
 package com.elefthes.maskswap.service;
 
+import com.elefthes.maskswap.dto.request.OrderConversionRequest;
 import com.elefthes.maskswap.entity.OrdersEntity;
 import com.elefthes.maskswap.util.StatusCode;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
@@ -24,11 +26,13 @@ public class OrderService {
     OrderVideoService orderVideoService;
     
     @Transactional
-    public long create(ByteArrayInputStream srcFile, 
-                             ByteArrayInputStream dstFile, 
+    public long create(InputStream srcFile, 
+                             InputStream dstFile, 
                              long userId) throws IOException, RuntimeException {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.OrderService");
         
+        //byte[] buf = new byte[8];
+        //logger.info("１回目抽出" + Integer.toString(requestData.getSrcFile().read(buf, 0, buf.length)));
         OrdersEntity order = new OrdersEntity();
         order.setUser(userService.getUser(userId));
         order.setProgress(0);

@@ -34,6 +34,7 @@ public class Login {
         logger.info("ServerName : " + req.getServerName());
         logger.info("RemoteAddr : " + req.getRemoteAddr());
         logger.info("RemoteHost : " + req.getRemoteHost());
+        logger.info("X-Forwarded-For" + req.getHeader("X-Forwarded-For"));
         String email = requestData.getEmail();
         String password = requestData.getPassword();
         
