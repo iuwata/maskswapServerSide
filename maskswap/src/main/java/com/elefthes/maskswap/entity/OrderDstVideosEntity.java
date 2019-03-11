@@ -15,11 +15,13 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "order_dst_videos")
 @IdClass(OrderVideoId.class)
+@NamedQuery(name = "OrderDstVideos.byId", query = "SELECT o FROM OrderDstVideosEntity o WHERE o.orderId = :orderId AND o.storageOrder = :storageOrder")
 public class OrderDstVideosEntity implements Serializable{
    private static final long serialVersionUID = 1L;
     

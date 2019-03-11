@@ -16,7 +16,8 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "orders")
 @NamedQueries({
-    @NamedQuery(name = "Orders.byId", query = "SELECT o From OrdersEntity o WHERE o.userId = :userId")
+    @NamedQuery(name = "Orders.byId", query = "SELECT o FROM OrdersEntity o WHERE o.userId = :userId"),
+    @NamedQuery(name = "Orders.orderById", query = "SELECT o FROM OrdersEntity o WHERE o.isStarting = 1 ORDER BY o.endDate asc, o.typeId desc, o.orderId asc")
 })
 public class OrdersEntity implements Serializable{
     private static final long serialVersionUID = 1L;
@@ -32,6 +33,9 @@ public class OrdersEntity implements Serializable{
     //private UsersEntity user;
     long userId;
     
+    @Column(name = "type_id")
+    int typeId;
+    
     @Column(name = "progress")
     private int progress;
     
@@ -41,8 +45,17 @@ public class OrdersEntity implements Serializable{
     @Column(name = "end_date")
     private Timestamp endDate;
     
-    @Column(name = "is_free")
-    private boolean isFree;
+    @Column(name = "is_converting")
+    private boolean isConverting;
+    
+    @Column(name = "is_starting")
+    private boolean isStarting;
+    
+    @Column(name = "dst_storage")
+    private int dstStorage;
+    
+    @Column(name = "src_storage")
+    private int srcStorage;
 
     public long getOrderId() {
         return orderId;
@@ -66,6 +79,14 @@ public class OrdersEntity implements Serializable{
 
     public void setUserId(long userId) {
         this.userId = userId;
+    }
+
+    public int getTypeId() {
+        return typeId;
+    }
+
+    public void setTypeId(int typeId) {
+        this.typeId = typeId;
     }
 
     public int getProgress() {
@@ -92,11 +113,36 @@ public class OrdersEntity implements Serializable{
         this.endDate = endDate;
     }
 
-    public boolean getIsFree() {
-        return isFree;
+    public boolean getIsConverting() {
+        return isConverting;
     }
     
-    public void setIsFree(boolean isFree) {
-        this.isFree = isFree;
+    public void setIsConverting(boolean isConverting) {
+        this.isConverting = isConverting;
     }
+    
+    public boolean getIsStarting() {
+        return isStarting;
+    }
+
+    public void setIsStarting(boolean isStarting) {
+        this.isStarting = isStarting;
+    }
+
+    public int getDstStorage() {
+        return dstStorage;
+    }
+
+    public void setDstStorage(int dstStorage) {
+        this.dstStorage = dstStorage;
+    }
+
+    public int getSrcStorage() {
+        return srcStorage;
+    }
+
+    public void setSrcStorage(int srcStorage) {
+        this.srcStorage = srcStorage;
+    }
+    
 }

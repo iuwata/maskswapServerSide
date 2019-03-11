@@ -5,6 +5,7 @@ import com.elefthes.maskswap.dto.response.OrderConversionResponse;
 import com.elefthes.maskswap.exception.CustomException;
 import com.elefthes.maskswap.service.OrderService;
 import com.elefthes.maskswap.util.StatusCode;
+import com.elefthes.maskswap.util.VirusChecker;
 import com.google.gson.Gson;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -67,7 +68,12 @@ public class Conversion {
             }
             logger.info("Conversion2");
             
+            
             //ウイルスチェック
+            if(VirusChecker.isVirus(dstFile) || VirusChecker.isVirus(srcFile)) {
+                //ウイルス検知
+                throw new CustomException(StatusCode.VirusFound);
+            }
             /*ClamavClient client = new ClamavClient("localhost");
             ScanResult scanSrcResult = client.scan(srcFile);
             ScanResult scanDstResult = client.scan(dstFile);

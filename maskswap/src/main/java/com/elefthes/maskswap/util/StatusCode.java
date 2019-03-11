@@ -13,7 +13,8 @@ public enum StatusCode {
     EmailAuthenticationExpired(9),
     IncorrectAuthenticationCode(10),
     NoSrcVideo(11),
-    NoDstVideo(12);
+    NoDstVideo(12),
+    VirusFound(13);
     
     
     private int id;

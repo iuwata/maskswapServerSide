@@ -33,6 +33,16 @@ public class OrderService {
         return result;
     }
     
+    @Transactional
+    public OrdersEntity getConvertOrder() {
+        OrdersEntity result = entityManager.createNamedQuery("Orders.orderById", OrdersEntity.class)
+                                        .setFirstResult(0)
+                                        .setMaxResults(1).getSingleResult();
+        result.setIsConverting(true);
+        entityManager.flush();
+        return result;
+    }
+    
     
     @Transactional
     public long create(InputStream srcFile, 
@@ -45,14 +55,24 @@ public class OrderService {
         order.setUserId(userId);
         order.setProgress(0);
         order.setOrderDate(new Timestamp(System.currentTimeMillis()));
-        order.setIsFree(true);
+        order.setIsConverting(false);
+        order.setIsStarting(false);
+        
+        //テスト用
+        order.setTypeId(1);
         
         entityManager.persist(order);
         entityManager.flush();
         logger.info("Conversion4");
         long orderId = order.getOrderId();
         
-        orderVideoService.uploadVideo(srcFile, dstFile, orderId, userId);
+        //orderVideoService.uploadVideo(srcFile, dstFile, orderId, userId);
+        int srcStorage = orderVideoService.uploadSrcVideo(srcFile, orderId, userId);
+        int dstStorage = orderVideoService.uploadDstVideo(dstFile, orderId, userId);
+        order.setSrcStorage(srcStorage);
+        order.setDstStorage(dstStorage);
+        entityManager.persist(order);
+        entityManager.flush();
         logger.info("Conversion5");
         return orderId;
     }

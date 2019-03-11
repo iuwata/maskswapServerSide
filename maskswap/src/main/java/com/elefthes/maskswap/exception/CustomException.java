@@ -5,7 +5,7 @@ import com.elefthes.maskswap.util.StatusCode;
 public class CustomException extends RuntimeException{
     private static final long serialVersionUID = 1L;
     
-    StatusCode code;
+    private StatusCode code;
     
     public CustomException(StatusCode code) {
         this.code = code;
