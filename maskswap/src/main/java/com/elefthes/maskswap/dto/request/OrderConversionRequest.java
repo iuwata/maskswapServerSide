@@ -14,6 +14,9 @@ public class OrderConversionRequest {
     
     @FormDataParam("dstFile")
     private InputStream dstFile;
+    
+    @FormDataParam("plan")
+    private int plan;
 
     public OrderConversionRequest() {}
     
@@ -37,8 +40,17 @@ public class OrderConversionRequest {
         return dstFile;
     }
     
-    
     public void setDstFile(InputStream dstFile) {
         this.dstFile = dstFile;
     }
+
+    public int getPlan() {
+        return plan;
+    }
+
+    public void setPlan(int plan) {
+        this.plan = plan;
+    }
+    
+    
 }

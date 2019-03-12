@@ -2,18 +2,25 @@ package com.elefthes.maskswap.service;
 
 import com.elefthes.maskswap.dto.request.OrderConversionRequest;
 import com.elefthes.maskswap.entity.OrdersEntity;
+import com.elefthes.maskswap.util.AdminStatusCode;
+import com.elefthes.maskswap.util.DateFormatter;
 import com.elefthes.maskswap.util.StatusCode;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPart;
+import org.glassfish.jersey.media.multipart.file.StreamDataBodyPart;
 
 @ApplicationScoped
 public class OrderService {
@@ -33,14 +40,19 @@ public class OrderService {
         return result;
     }
     
-    @Transactional
-    public OrdersEntity getConvertOrder() {
+    //@Transactional
+    public OrdersEntity getConvertOrder() throws IOException, NoResultException {
         OrdersEntity result = entityManager.createNamedQuery("Orders.orderById", OrdersEntity.class)
                                         .setFirstResult(0)
                                         .setMaxResults(1).getSingleResult();
-        result.setIsConverting(true);
-        entityManager.flush();
         return result;
+    }
+    
+    @Transactional
+    public void setConverting(OrdersEntity order) {
+        order.setIsConverting(true);
+        entityManager.persist(order);
+        entityManager.flush();
     }
     
     

@@ -17,7 +17,7 @@ import javax.persistence.Table;
 @Table(name = "orders")
 @NamedQueries({
     @NamedQuery(name = "Orders.byId", query = "SELECT o FROM OrdersEntity o WHERE o.userId = :userId"),
-    @NamedQuery(name = "Orders.orderById", query = "SELECT o FROM OrdersEntity o WHERE o.isStarting = 1 ORDER BY o.endDate asc, o.typeId desc, o.orderId asc")
+    @NamedQuery(name = "Orders.orderById", query = "SELECT o FROM OrdersEntity o WHERE o.isStarting = 1 AND o.isConverting = 0, o.typeId desc, o.orderId asc")
 })
 public class OrdersEntity implements Serializable{
     private static final long serialVersionUID = 1L;
