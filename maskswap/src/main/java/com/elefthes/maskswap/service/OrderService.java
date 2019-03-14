@@ -35,7 +35,7 @@ public class OrderService {
     
     
     public List<OrdersEntity> getOrders(long userId) {
-        List<OrdersEntity> result = entityManager.createNamedQuery("Orders.byId", OrdersEntity.class)
+        List<OrdersEntity> result = entityManager.createNamedQuery("Orders.byUserId", OrdersEntity.class)
                                             .setParameter("userId", userId).getResultList();
         return result;
     }
@@ -45,6 +45,13 @@ public class OrderService {
         OrdersEntity result = entityManager.createNamedQuery("Orders.orderById", OrdersEntity.class)
                                         .setFirstResult(0)
                                         .setMaxResults(1).getSingleResult();
+        return result;
+    }
+    
+    public OrdersEntity getOrderByOrderId(long orderId) {
+        OrdersEntity result = entityManager.createNamedQuery("Orders.byOrderId", OrdersEntity.class)
+                                        .setParameter("orderId", orderId)
+                                        .getSingleResult();
         return result;
     }
     
@@ -68,7 +75,10 @@ public class OrderService {
         order.setProgress(0);
         order.setOrderDate(new Timestamp(System.currentTimeMillis()));
         order.setIsConverting(false);
-        order.setIsStarting(false);
+        
+        //テスト用
+        order.setPaymentDate(new Timestamp(System.currentTimeMillis()));
+        //order.setIsStarting(false);
         
         //テスト用
         order.setTypeId(1);

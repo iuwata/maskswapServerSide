@@ -5,6 +5,7 @@ import com.elefthes.maskswap.dto.response.OrderConversionResponse;
 import com.elefthes.maskswap.exception.CustomException;
 import com.elefthes.maskswap.service.OrderService;
 import com.elefthes.maskswap.util.StatusCode;
+import com.elefthes.maskswap.util.StreamConverter;
 import com.elefthes.maskswap.util.VirusChecker;
 import com.google.gson.Gson;
 import java.io.ByteArrayInputStream;
@@ -36,14 +37,16 @@ public class Conversion {
     @Consumes(MediaType.MULTIPART_FORM_DATA) 
     @Produces(MediaType.APPLICATION_JSON)
     public String orderConversion(@FormDataParam("token") String token, 
-                                  @FormDataParam("srcFile") InputStream srcFile,
-                                  @FormDataParam("dstFile") InputStream dstFile,
+                                  @FormDataParam("srcFile") InputStream originSrcFile,
+                                  @FormDataParam("dstFile") InputStream originDstFile,
                                   @Context HttpServletRequest req) throws IOException {
     
         Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
         logger.info("Conversionが呼び出されました");
         
         OrderConversionResponse responseData = new OrderConversionResponse();
+        InputStream srcFile = null;
+        InputStream dstFile = null;
         Gson gson = new Gson();
         
         try {
@@ -58,28 +61,29 @@ public class Conversion {
                 throw new CustomException(StatusCode.NeedLogin);
             }
 
-            if(dstFile == null) {
+            if(originDstFile == null) {
                 logger.info("dstFileがnullです");
                 throw new CustomException(StatusCode.NoDstVideo);
             }
-            if(srcFile == null) {
+            if(originSrcFile == null) {
                 logger.info("srcFileがnullです");
                 throw new CustomException(StatusCode.NoSrcVideo);
             }
             logger.info("Conversion2");
             
+            java.nio.file.Path srcTmpFile =  StreamConverter.getTmpFile(originSrcFile);
+            java.nio.file.Path dstTmpFile =  StreamConverter.getTmpFile(originDstFile);
             
             //ウイルスチェック
-            if(VirusChecker.isVirus(dstFile) || VirusChecker.isVirus(srcFile)) {
+            if(VirusChecker.isVirus(srcTmpFile) || VirusChecker.isVirus(dstTmpFile)) {
                 //ウイルス検知
                 throw new CustomException(StatusCode.VirusFound);
             }
-            /*ClamavClient client = new ClamavClient("localhost");
-            ScanResult scanSrcResult = client.scan(srcFile);
-            ScanResult scanDstResult = client.scan(dstFile);
-            if(scanDstResult instanceof ScanResult.VirusFound || scanSrcResult instanceof ScanResult.VirusFound) {
-                logger.info("ウイルスが見つかりました");
-            }*/
+            
+            srcFile = StreamConverter.getInputStreamDeleteOnClose(srcTmpFile);
+            dstFile = StreamConverter.getInputStreamDeleteOnClose(dstTmpFile);
+            
+            
             logger.info("Conversion3");
             long userId = (long)session.getAttribute("userId");
 
@@ -90,6 +94,7 @@ public class Conversion {
             logger.info("動画アップロード完了");
         } catch(IOException e) {
             responseData.setResult(StatusCode.Failure);
+            e.printStackTrace();
             logger.info("動画アップロード失敗1");
         } catch(CustomException e) {
             responseData.setResult(e.getCode());

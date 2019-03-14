@@ -1,6 +1,9 @@
 package com.elefthes.maskswap.controller;
 
 import com.elefthes.maskswap.dto.request.FindOrderByAdminRequest;
+import com.elefthes.maskswap.dto.request.GetVideoByAdminRequest;
+import com.elefthes.maskswap.dto.response.FindOrderByAdminResponse;
+import com.elefthes.maskswap.dto.response.OrderConversionResponse;
 import com.elefthes.maskswap.entity.OrdersEntity;
 import com.elefthes.maskswap.exception.AdminCustomException;
 import com.elefthes.maskswap.service.AdminService;
@@ -8,8 +11,10 @@ import com.elefthes.maskswap.service.OrderService;
 import com.elefthes.maskswap.service.OrderVideoService;
 import com.elefthes.maskswap.util.AdminStatusCode;
 import com.elefthes.maskswap.util.DateFormatter;
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Date;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
@@ -21,6 +26,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.file.StreamDataBodyPart;
@@ -40,12 +47,68 @@ public class Control {
     @POST
     @Path("m2swetg3j4i8sh3vy794g6z2")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String findOrder(FindOrderByAdminRequest requestData) throws IOException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Control");
+        
+        FindOrderByAdminResponse responseData = new FindOrderByAdminResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //ログインチェック
+            if(adminService.login(requestData.getEmail(), requestData.getPassword()) == false) {
+                //失敗時の処理
+                logger.info("アドミンログイン失敗");
+                throw new AdminCustomException(AdminStatusCode.Failure);
+            }
+            
+            OrdersEntity order = orderService.getConvertOrder();
+            String orderDate = DateFormatter.convertSlash(new Date(order.getOrderDate().getTime()));
+            int plan = order.getTypeId();
+            
+            responseData.setOrderDate(orderDate);
+            responseData.setOrderId(order.getOrderId());
+            responseData.setPlan(plan);
+            responseData.setResult(AdminStatusCode.Success);
+            
+            orderService.setConverting(order);
+        } catch(NoResultException e) {
+            responseData.setResult(AdminStatusCode.NoOrder);
+        } catch(AdminCustomException e) {
+            responseData.setResult(e.getCode());
+        } catch(RuntimeException e) {
+            responseData.setResult(AdminStatusCode.Failure);
+        }
+        
+        return gson.toJson(responseData);
+    }
+    
+    @POST
+    @Path("y6akpkwagwwrrqesa99yaysz")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces("video/mp4")
+    public Response getDstFile(GetVideoByAdminRequest requestData) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Control");
+        //ログインチェック
+        if(adminService.login(requestData.getEmail(), requestData.getPassword()) == false) {
+            //失敗時の処理
+            logger.info("アドミンログイン失敗");
+            throw new AdminCustomException(AdminStatusCode.Failure);
+        }
+        
+        StreamingOutput fileStream = new StreamingOutput() {
+        }
+    }
+    
+/*    
+    @POST
+    @Path("m2swetg3j4i8sh3vy794g6z2")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces("multipart/mixed")
     //@Transactional
     public MultiPart findOrderByAdmin(FindOrderByAdminRequest requestData) throws IOException {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Control");
         logger.info("アクセス検知");
-        logger.info(String.valueOf(AdminStatusCode.NoOrder.getId()));
         
         int result;
         FormDataMultiPart multipart = new FormDataMultiPart();
@@ -102,4 +165,5 @@ public class Control {
         
         return multipart;
     }
+*/
 }

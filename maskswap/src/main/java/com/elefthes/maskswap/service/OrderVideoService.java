@@ -4,7 +4,7 @@ import com.elefthes.maskswap.entity.OrderDstVideosEntity;
 import com.elefthes.maskswap.entity.OrderSrcVideosEntity;
 import com.elefthes.maskswap.exception.CustomException;
 import com.elefthes.maskswap.util.StatusCode;
-import com.elefthes.maskswap.util.StreamConvert;
+import com.elefthes.maskswap.util.StreamConverter;
 import com.elefthes.maskswap.util.VirusChecker;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -81,7 +81,7 @@ public class OrderVideoService {
         //srcファイルをアップロード
         int i;
         for(i = 0; true; i++) {
-            byte[] buffer = StreamConvert.getBytes(srcFile, maxLength);
+            byte[] buffer = StreamConverter.getBytes(srcFile, maxLength);
             logger.info("src動画サイズ" + i + " : " + buffer.length);
             OrderSrcVideosEntity orderSrcVideo = new OrderSrcVideosEntity();
             orderSrcVideo.setOrderId(orderId);
@@ -112,7 +112,7 @@ public class OrderVideoService {
         //dstファイルをアップロード
         int i;
         for( i = 0; true; i++) {
-            byte[] buffer = StreamConvert.getBytes(dstFile, maxLength);
+            byte[] buffer = StreamConverter.getBytes(dstFile, maxLength);
             logger.info("dst動画サイズ" + i + " : " + buffer.length);
             OrderDstVideosEntity orderDstVideo = new OrderDstVideosEntity();
             orderDstVideo.setOrderId(orderId);

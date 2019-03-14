@@ -16,8 +16,9 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "orders")
 @NamedQueries({
-    @NamedQuery(name = "Orders.byId", query = "SELECT o FROM OrdersEntity o WHERE o.userId = :userId"),
-    @NamedQuery(name = "Orders.orderById", query = "SELECT o FROM OrdersEntity o WHERE o.isStarting = 1 AND o.isConverting = 0, o.typeId desc, o.orderId asc")
+    @NamedQuery(name = "Orders.byUserId", query = "SELECT o FROM OrdersEntity o WHERE o.userId = :userId"),
+    @NamedQuery(name = "Orders.orderById", query = "SELECT o FROM OrdersEntity o WHERE o.isStarting = 1 AND o.isConverting = 0 ORDER BY o.typeId desc, o.orderId asc"),
+    @NamedQuery(name = "Orders.byOrderId", query = "SELECT o FROM OrdersEntity o WHERE o.orderId = :orderId")
 })
 public class OrdersEntity implements Serializable{
     private static final long serialVersionUID = 1L;
@@ -48,8 +49,8 @@ public class OrdersEntity implements Serializable{
     @Column(name = "is_converting")
     private boolean isConverting;
     
-    @Column(name = "is_starting")
-    private boolean isStarting;
+    @Column(name = "payment_date")
+    private Timestamp paymentDate;
     
     @Column(name = "dst_storage")
     private int dstStorage;
@@ -120,15 +121,15 @@ public class OrdersEntity implements Serializable{
     public void setIsConverting(boolean isConverting) {
         this.isConverting = isConverting;
     }
+
+    public Timestamp getPaymentDate() {
+        return paymentDate;
+    }
+
+    public void setPaymentDate(Timestamp paymentDate) {
+        this.paymentDate = paymentDate;
+    }
     
-    public boolean getIsStarting() {
-        return isStarting;
-    }
-
-    public void setIsStarting(boolean isStarting) {
-        this.isStarting = isStarting;
-    }
-
     public int getDstStorage() {
         return dstStorage;
     }
