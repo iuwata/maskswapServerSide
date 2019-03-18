@@ -1,7 +1,9 @@
 package com.elefthes.maskswap.controller;
 
 import com.elefthes.maskswap.dto.request.OrderConversionRequest;
+import com.elefthes.maskswap.dto.request.RequestWithToken;
 import com.elefthes.maskswap.dto.response.OrderConversionResponse;
+import com.elefthes.maskswap.dto.response.StatusResponse;
 import com.elefthes.maskswap.exception.CustomException;
 import com.elefthes.maskswap.service.OrderService;
 import com.elefthes.maskswap.util.StatusCode;
@@ -31,6 +33,13 @@ import xyz.capybara.clamav.commands.scan.result.ScanResult;
 public class Conversion {
     @Inject 
     OrderService orderService;
+    
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String orderStatus(RequestWithToken requestData) {
+        StatusResponse responseData = new StatusResponse();
+    }
     
     @POST
     @Path("order")

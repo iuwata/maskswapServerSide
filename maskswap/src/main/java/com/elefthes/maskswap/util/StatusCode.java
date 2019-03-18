@@ -14,7 +14,11 @@ public enum StatusCode {
     IncorrectAuthenticationCode(10),
     NoSrcVideo(11),
     NoDstVideo(12),
-    VirusFound(13);
+    VirusFound(13),
+    NoOrder(14),
+    IncompleteOrder(15),
+    CompleteOrder(16);
+    
     
     
     private int id;
