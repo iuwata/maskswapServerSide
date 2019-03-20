@@ -3,7 +3,9 @@ package com.elefthes.maskswap.controller;
 import com.elefthes.maskswap.dto.request.OrderConversionRequest;
 import com.elefthes.maskswap.dto.request.RequestWithToken;
 import com.elefthes.maskswap.dto.response.OrderConversionResponse;
+import com.elefthes.maskswap.dto.response.OrderStatusResponse;
 import com.elefthes.maskswap.dto.response.StatusResponse;
+import com.elefthes.maskswap.entity.OrdersEntity;
 import com.elefthes.maskswap.exception.CustomException;
 import com.elefthes.maskswap.service.OrderService;
 import com.elefthes.maskswap.util.StatusCode;
@@ -13,6 +15,7 @@ import com.google.gson.Gson;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -35,11 +38,122 @@ public class Conversion {
     OrderService orderService;
     
     @POST
+    @Path("status")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String orderStatus(RequestWithToken requestData) {
+    public String getStatus(RequestWithToken requestData, @Context HttpServletRequest req) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
+        
         StatusResponse responseData = new StatusResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //トークンチェック
+            HttpSession session = req.getSession(false);
+            if(session == null) {
+                logger.info("セッションが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            if(!(session.getAttribute("token").equals(requestData.getToken()))){
+                logger.info("トークンが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            
+            List<OrdersEntity> orders = orderService.getOrders((long)session.getAttribute("userId"));
+            
+            if(orders.size() == 0) {
+                responseData.setResult(StatusCode.NoOrder);
+                return gson.toJson(responseData);
+            }
+            
+            for(OrdersEntity order : orders) {
+                if(order.getPaymentDate() == null) {
+                    responseData.setResult(StatusCode.IncompleteOrder);
+                    return gson.toJson(responseData);
+                }
+            }
+            responseData.setResult(StatusCode.CompleteOrder);
+        } catch(CustomException e) {
+            responseData.setResult(e.getCode());
+            e.printStackTrace();
+        } catch(RuntimeException e) {
+            responseData.setResult(StatusCode.Failure);
+            logger.info("依頼状況取得失敗");
+            e.printStackTrace();
+        }
+        
+        return gson.toJson(responseData);
     }
+    
+    @POST
+    @Path("order/status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getOrderStatus(RequestWithToken requestData, @Context HttpServletRequest req) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
+        OrderStatusResponse responseData = new OrderStatusResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //トークンチェック
+            HttpSession session = req.getSession(false);
+            if(session == null) {
+                logger.info("セッションが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            if(!(session.getAttribute("token").equals(requestData.getToken()))){
+                logger.info("トークンが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            
+            List<OrdersEntity> orders = orderService.getOrders((long)session.getAttribute("userId"));
+            
+            if(orders.size() == 0) {
+                responseData.setResult(StatusCode.NoOrder);
+                return gson.toJson(responseData);
+            }
+            
+            for(OrdersEntity order : orders) {
+                if(order.getPaymentDate() == null) {
+                    responseData.setOrderId(order.getOrderId());
+                    if(order.getSrcStorage() == 0) {
+                        //srcがアップロードされていない
+                        if(order.getDstStorage() == 0) {
+                            //src,dstがアップロードされていない
+                            responseData.setResult(StatusCode.VideosNotUploaded);
+                            return gson.toJson(responseData);
+                        } else {
+                            //srcがアップロードされていないかつdstがアップロードされている
+                            responseData.setResult(StatusCode.DstVideoUploaded);
+                            return gson.toJson(responseData);
+                        }
+                    } else {
+                        //srcがアップロードされている
+                        if(order.getDstStorage() == 0) {
+                            //srcがアップロードされているかつdstがアップロードされていない
+                            responseData.setResult(StatusCode.SrcVideoUploaded);
+                            return gson.toJson(responseData);
+                        } else {
+                            //src,dstがアップロードされている
+                            responseData.setResult(StatusCode.VideosNotUploaded);
+                            return gson.toJson(responseData);
+                        }
+                    } 
+                }
+            }
+            responseData.setResult(StatusCode.CompleteOrder);
+        } catch(CustomException e) {
+            responseData.setResult(e.getCode());
+            e.printStackTrace();
+        } catch(RuntimeException e) {
+            responseData.setResult(StatusCode.Failure);
+            logger.info("依頼状況取得失敗");
+            e.printStackTrace();
+        }
+        
+        return gson.toJson(responseData);
+    }
+    
     
     @POST
     @Path("order")

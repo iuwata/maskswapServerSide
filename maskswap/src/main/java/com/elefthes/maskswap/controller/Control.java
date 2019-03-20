@@ -2,13 +2,16 @@ package com.elefthes.maskswap.controller;
 
 import com.elefthes.maskswap.dto.request.FindOrderByAdminRequest;
 import com.elefthes.maskswap.dto.request.GetVideoByAdminRequest;
+import com.elefthes.maskswap.dto.response.AdminStatusResponse;
 import com.elefthes.maskswap.dto.response.FindOrderByAdminResponse;
 import com.elefthes.maskswap.dto.response.OrderConversionResponse;
+import com.elefthes.maskswap.dto.response.StatusResponse;
 import com.elefthes.maskswap.entity.OrdersEntity;
 import com.elefthes.maskswap.exception.AdminCustomException;
 import com.elefthes.maskswap.service.AdminService;
 import com.elefthes.maskswap.service.OrderService;
 import com.elefthes.maskswap.service.OrderVideoService;
+import com.elefthes.maskswap.service.VideoStreamingOutput;
 import com.elefthes.maskswap.util.AdminStatusCode;
 import com.elefthes.maskswap.util.DateFormatter;
 import com.google.gson.Gson;
@@ -29,6 +32,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.file.StreamDataBodyPart;
 
@@ -87,7 +91,7 @@ public class Control {
     @Path("y6akpkwagwwrrqesa99yaysz")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces("video/mp4")
-    public Response getDstFile(GetVideoByAdminRequest requestData) {
+    public Response getDstFile(GetVideoByAdminRequest requestData) throws IOException {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Control");
         //ログインチェック
         if(adminService.login(requestData.getEmail(), requestData.getPassword()) == false) {
@@ -96,8 +100,59 @@ public class Control {
             throw new AdminCustomException(AdminStatusCode.Failure);
         }
         
-        StreamingOutput fileStream = new StreamingOutput() {
+        long orderId = requestData.getOrderId();
+        int storage = orderService.getOrderByOrderId(orderId).getDstStorage();
+        InputStream is = orderVideoService.getDstVideo(orderId, storage);
+        StreamingOutput fileStream = new VideoStreamingOutput(requestData.getOrderId(), is);
+        
+        return Response.ok(fileStream).build();
+    }
+    
+    @POST
+    @Path("fmgymzbvyawd9cznw6hyh6em")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces("video/mp4")
+    public Response getSrcFile(GetVideoByAdminRequest requestData) throws IOException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Control");
+        //ログインチェック
+        if(adminService.login(requestData.getEmail(), requestData.getPassword()) == false) {
+            //失敗時の処理
+            logger.info("アドミンログイン失敗");
+            throw new AdminCustomException(AdminStatusCode.Failure);
         }
+        
+        long orderId = requestData.getOrderId();
+        int storage = orderService.getOrderByOrderId(orderId).getSrcStorage();
+        InputStream is = orderVideoService.getSrcVideo(orderId, storage);
+        StreamingOutput fileStream = new VideoStreamingOutput(requestData.getOrderId(), is);
+        
+        return Response.ok(fileStream).build();
+    }
+    
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String uploadCompletedVideo(@FormDataParam("email") String email,
+                                     @FormDataParam("password") String password,
+                                     @FormDataParam("completedVideo") InputStream completedVideo) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Control");
+        AdminStatusResponse responseData = new AdminStatusResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //ログインチェック
+            if(adminService.login(email, password) == false) {
+                //失敗時の処理
+                logger.info("アドミンログイン失敗");
+                throw new AdminCustomException(AdminStatusCode.Failure);
+            }
+        } catch(AdminCustomException e) {
+            responseData.setResult(e.getCode());
+        } catch(RuntimeException e) {
+            responseData.setResult(AdminStatusCode.Failure);
+        }
+        
+        return gson.toJson(responseData);
     }
     
 /*    

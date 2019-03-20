@@ -17,7 +17,11 @@ public enum StatusCode {
     VirusFound(13),
     NoOrder(14),
     IncompleteOrder(15),
-    CompleteOrder(16);
+    CompleteOrder(16),
+    VideosNotUploaded(17),
+    SrcVideoUploaded(18),
+    DstVideoUploaded(19),
+    VideosUploaded(20);
     
     
     

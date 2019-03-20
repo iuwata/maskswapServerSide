@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,6 +13,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.logging.Logger;
 
 public class StreamConverter {
+    
     /**
      * InputStreamの読み込みが終わったかは戻り値のバイト配列の長さから調べること。
      * 

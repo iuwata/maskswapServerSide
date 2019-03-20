@@ -17,7 +17,7 @@ import javax.persistence.Table;
 @Table(name = "orders")
 @NamedQueries({
     @NamedQuery(name = "Orders.byUserId", query = "SELECT o FROM OrdersEntity o WHERE o.userId = :userId"),
-    @NamedQuery(name = "Orders.orderById", query = "SELECT o FROM OrdersEntity o WHERE o.isStarting = 1 AND o.isConverting = 0 ORDER BY o.typeId desc, o.orderId asc"),
+    @NamedQuery(name = "Orders.orderById", query = "SELECT o FROM OrdersEntity o WHERE o.paymentDate IS NOT NULL AND o.isConverting = 0 ORDER BY o.typeId desc, o.paymentDate asc"),
     @NamedQuery(name = "Orders.byOrderId", query = "SELECT o FROM OrdersEntity o WHERE o.orderId = :orderId")
 })
 public class OrdersEntity implements Serializable{
@@ -57,6 +57,9 @@ public class OrdersEntity implements Serializable{
     
     @Column(name = "src_storage")
     private int srcStorage;
+    
+    @Column(name = "completed_storage")
+    private int completedStorage;
 
     public long getOrderId() {
         return orderId;
@@ -145,5 +148,12 @@ public class OrdersEntity implements Serializable{
     public void setSrcStorage(int srcStorage) {
         this.srcStorage = srcStorage;
     }
-    
+
+    public int getCompletedStorage() {
+        return completedStorage;
+    }
+
+    public void setCompletedStorage(int completedStorage) {
+        this.completedStorage = completedStorage;
+    }
 }

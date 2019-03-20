@@ -32,6 +32,7 @@ public class OrderVideoService {
     @PersistenceContext(unitName = "maskswapGeneral")
     private EntityManager entityManager;  
     
+    @Transactional
     public InputStream getSrcVideo(long orderId, int storage) throws IOException {
         Path tmpPath = Files.createTempFile(Paths.get(System.getProperty("java.io.tmpdir"), "maskswap"), null, null);
         OutputStream os = Files.newOutputStream(tmpPath);
@@ -40,7 +41,7 @@ public class OrderVideoService {
         for(int i = 0; i < storage; i++) {
             OrderSrcVideosEntity video = entityManager.createNamedQuery("OrderSrcVideos.byId", OrderSrcVideosEntity.class)
                                                 .setParameter("orderId", orderId)
-                                                .setParameter("storageOrder", storage)
+                                                .setParameter("storageOrder", i)
                                                 .getSingleResult();
             bos.write(video.getVideo());
             bos.flush();
@@ -52,6 +53,7 @@ public class OrderVideoService {
         return Files.newInputStream(tmpPath, StandardOpenOption.DELETE_ON_CLOSE);
     }
     
+    @Transactional
     public InputStream getDstVideo(long orderId, int storage) throws IOException {
         Path tmpPath = Files.createTempFile(Paths.get(System.getProperty("java.io.tmpdir"), "maskswap"), null, null);
         OutputStream os = Files.newOutputStream(tmpPath);
@@ -59,8 +61,8 @@ public class OrderVideoService {
         
         for(int i = 0; i < storage; i++) {
             OrderDstVideosEntity video = entityManager.createNamedQuery("OrderDstVideos.byId", OrderDstVideosEntity.class)
-                                                .setParameter("orderid", orderId)
-                                                .setParameter("storageOrder", storage)
+                                                .setParameter("orderId", orderId)
+                                                .setParameter("storageOrder", i)
                                                 .getSingleResult();
             bos.write(video.getVideo());
             bos.flush();
