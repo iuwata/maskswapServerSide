@@ -154,6 +154,42 @@ public class Conversion {
         return gson.toJson(responseData);
     }
     
+    @POST
+    @Path("order/frame")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String orderConversionFrame(RequestWithToken requestData, @Context HttpServletRequest req) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
+        StatusResponse responseData = new StatusResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //トークンチェック
+            HttpSession session = req.getSession(false);
+            if(session == null) {
+                logger.info("セッションが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            if(!(session.getAttribute("token").equals(requestData.getToken()))){
+                logger.info("トークンが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            
+            orderService.create((long)session.getAttribute("userId"));
+            responseData.setResult(StatusCode.Failure);
+        } catch(CustomException e) {
+            responseData.setResult(e.getCode());
+            e.printStackTrace();
+        } catch(RuntimeException e) {
+            responseData.setResult(StatusCode.Failure);
+            logger.info("依頼状況取得失敗");
+            e.printStackTrace();
+        }
+        
+        return gson.toJson(responseData);
+        
+    }
+    
     
     @POST
     @Path("order")

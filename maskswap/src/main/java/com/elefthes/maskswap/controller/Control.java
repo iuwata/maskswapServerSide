@@ -2,6 +2,7 @@ package com.elefthes.maskswap.controller;
 
 import com.elefthes.maskswap.dto.request.FindOrderByAdminRequest;
 import com.elefthes.maskswap.dto.request.GetVideoByAdminRequest;
+import com.elefthes.maskswap.dto.request.UpdateProgressByAdminRequest;
 import com.elefthes.maskswap.dto.response.AdminStatusResponse;
 import com.elefthes.maskswap.dto.response.FindOrderByAdminResponse;
 import com.elefthes.maskswap.dto.response.OrderConversionResponse;
@@ -14,6 +15,8 @@ import com.elefthes.maskswap.service.OrderVideoService;
 import com.elefthes.maskswap.service.VideoStreamingOutput;
 import com.elefthes.maskswap.util.AdminStatusCode;
 import com.elefthes.maskswap.util.DateFormatter;
+import com.elefthes.maskswap.util.StreamConverter;
+import com.elefthes.maskswap.util.VirusChecker;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.InputStream;
@@ -130,22 +133,24 @@ public class Control {
     }
     
     @POST
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Path("9s9yxjfb4acky927cd2apcqk")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String uploadCompletedVideo(@FormDataParam("email") String email,
-                                     @FormDataParam("password") String password,
-                                     @FormDataParam("completedVideo") InputStream completedVideo) {
+    public String updateProgress(UpdateProgressByAdminRequest requestData) {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Control");
         AdminStatusResponse responseData = new AdminStatusResponse();
         Gson gson = new Gson();
         
         try {
             //ログインチェック
-            if(adminService.login(email, password) == false) {
+            if(adminService.login(requestData.getEmail(), requestData.getPassword()) == false) {
                 //失敗時の処理
                 logger.info("アドミンログイン失敗");
                 throw new AdminCustomException(AdminStatusCode.Failure);
             }
+            
+            orderService.updateProgress(requestData.getOrderId(), requestData.getProgress());
+            responseData.setResult(AdminStatusCode.Success);
         } catch(AdminCustomException e) {
             responseData.setResult(e.getCode());
         } catch(RuntimeException e) {
@@ -154,6 +159,63 @@ public class Control {
         
         return gson.toJson(responseData);
     }
+    
+    @POST
+    @Path("vbjszhwkeusupatwj97gkuwf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String uploadCompletedVideo(@FormDataParam("email") String email,
+                                     @FormDataParam("password") String password,
+                                     @FormDataParam("orderId") long orderId,
+                                     @FormDataParam("completedVideo") InputStream originCompletedVideo) throws IOException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Control");
+        AdminStatusResponse responseData = new AdminStatusResponse();
+        Gson gson = new Gson();
+        
+        InputStream completedVideo = null;
+        
+        try {
+            //ログインチェック
+            if(adminService.login(email, password) == false) {
+                //失敗時の処理
+                logger.info("アドミンログイン失敗");
+                throw new AdminCustomException(AdminStatusCode.Failure);
+            }
+            
+            //nullチェック
+            if(originCompletedVideo == null) {
+                logger.info("完成動画がアップロードされていない");
+                throw new AdminCustomException(AdminStatusCode.NotUploadCompletedVideo);
+            }
+            
+            java.nio.file.Path tmpFile = StreamConverter.getTmpFile(originCompletedVideo);
+            
+            //ウイルスチェック
+            if(VirusChecker.isVirus(tmpFile)) {
+                //ウイルス検知
+                throw new AdminCustomException(AdminStatusCode.VirusFound);
+            }
+            
+            if(orderId != 0) {
+                throw new AdminCustomException(AdminStatusCode.Failure);
+            }
+            
+            completedVideo = StreamConverter.getInputStreamDeleteOnClose(tmpFile);
+            adminService.uploadCompletedVide(completedVideo, orderId);
+            responseData.setResult(AdminStatusCode.Success);
+        } catch(AdminCustomException e) {
+            responseData.setResult(e.getCode());
+        } catch(RuntimeException e) {
+            responseData.setResult(AdminStatusCode.Failure);
+        } finally {
+            if(completedVideo != null) {
+                completedVideo.close();
+            }
+        }
+        
+        return gson.toJson(responseData);
+    }
+    
     
 /*    
     @POST

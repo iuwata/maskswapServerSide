@@ -62,6 +62,30 @@ public class OrderService {
         entityManager.flush();
     }
     
+    @Transactional
+    public void updateProgress(long orderId, int progress) {
+        OrdersEntity order = this.getOrderByOrderId(orderId);
+        order.setProgress(progress);
+        entityManager.persist(order);
+        entityManager.flush();
+    }
+    
+    @Transactional
+    public long create(long userId) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.service.OrderService");
+        
+        OrdersEntity order = new OrdersEntity();
+        order.setUserId(userId);
+        order.setOrderDate(new Timestamp(System.currentTimeMillis()));
+        order.setIsConverting(false);
+        
+        entityManager.persist(order);
+        entityManager.flush();
+        
+        long orderId = order.getOrderId();
+        return orderId;
+    }
+    
     
     @Transactional
     public long create(InputStream srcFile, 
