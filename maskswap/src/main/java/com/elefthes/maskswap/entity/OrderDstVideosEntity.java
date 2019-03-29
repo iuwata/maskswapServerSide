@@ -9,19 +9,19 @@ import com.elefthes.maskswap.entity.id.OrderVideoId;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "order_dst_videos")
 @IdClass(OrderVideoId.class)
-@NamedQuery(name = "OrderDstVideos.byId", query = "SELECT o FROM OrderDstVideosEntity o WHERE o.orderId = :orderId AND o.storageOrder = :storageOrder")
+@NamedQueries({
+    @NamedQuery(name = "OrderDstVideos.byId", query = "SELECT o FROM OrderDstVideosEntity o WHERE o.orderId = :orderId AND o.storageOrder = :storageOrder"),
+    @NamedQuery(name = "OrderDstVideos.deleteByOrderId", query = "DELETE FROM OrderDstVideosEntity o WHERE o.orderId = :orderId")
+})
 public class OrderDstVideosEntity implements Serializable{
    private static final long serialVersionUID = 1L;
     

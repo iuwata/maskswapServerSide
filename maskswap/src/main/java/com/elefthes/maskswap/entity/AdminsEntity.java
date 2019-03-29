@@ -15,7 +15,7 @@ public class AdminsEntity implements Serializable{
     
     @Id
     @Column(name = "admin_id")
-    private int adminId;
+    private Integer adminId;
     
     @Column(name = "email")
     private String email;
@@ -25,6 +25,9 @@ public class AdminsEntity implements Serializable{
     
     @Column(name = "salt")
     private String salt;
+    
+    @Column(name = "type_id")
+    private int typeId;
 
     public int getAdminId() {
         return adminId;
@@ -56,5 +59,13 @@ public class AdminsEntity implements Serializable{
 
     public void setSalt(String salt) {
         this.salt = salt;
+    }
+
+    public Integer getTypeId() {
+        return typeId;
+    }
+
+    public void setTypeId(int typeId) {
+        this.typeId = typeId;
     }
 }

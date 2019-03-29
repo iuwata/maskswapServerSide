@@ -1,13 +1,19 @@
 package com.elefthes.maskswap.controller;
 
+import com.elefthes.maskswap.dto.request.DeleteVideoRequest;
+import com.elefthes.maskswap.dto.request.GetAmountRequest;
 import com.elefthes.maskswap.dto.request.OrderConversionRequest;
 import com.elefthes.maskswap.dto.request.RequestWithToken;
+import com.elefthes.maskswap.dto.request.SetPlanRequest;
+import com.elefthes.maskswap.dto.response.GetAmountResponse;
 import com.elefthes.maskswap.dto.response.OrderConversionResponse;
 import com.elefthes.maskswap.dto.response.OrderStatusResponse;
+import com.elefthes.maskswap.dto.response.SetPlanResponse;
 import com.elefthes.maskswap.dto.response.StatusResponse;
 import com.elefthes.maskswap.entity.OrdersEntity;
 import com.elefthes.maskswap.exception.CustomException;
 import com.elefthes.maskswap.service.OrderService;
+import com.elefthes.maskswap.service.OrderVideoService;
 import com.elefthes.maskswap.util.StatusCode;
 import com.elefthes.maskswap.util.StreamConverter;
 import com.elefthes.maskswap.util.VirusChecker;
@@ -28,8 +34,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import xyz.capybara.clamav.ClamavClient;
-import xyz.capybara.clamav.commands.scan.result.ScanResult;
 
 @ApplicationScoped
 @Path("conversion")
@@ -37,7 +41,7 @@ public class Conversion {
     @Inject 
     OrderService orderService;
     
-    @POST
+    /*@POST
     @Path("status")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -59,14 +63,17 @@ public class Conversion {
                 throw new CustomException(StatusCode.NeedLogin);
             }
             
-            List<OrdersEntity> orders = orderService.getOrders((long)session.getAttribute("userId"));
+            //変換未完了の依頼を取得
+            List<OrdersEntity> orders = orderService.getOrdersEntityEndDateNull((long)session.getAttribute("userId"));
             
+            //変換未完了の依頼が存在しない
             if(orders.size() == 0) {
                 responseData.setResult(StatusCode.NoOrder);
                 return gson.toJson(responseData);
             }
             
             for(OrdersEntity order : orders) {
+                //変換未完了かつ決済がまだ済んでいない
                 if(order.getPaymentDate() == null) {
                     responseData.setResult(StatusCode.IncompleteOrder);
                     return gson.toJson(responseData);
@@ -83,7 +90,7 @@ public class Conversion {
         }
         
         return gson.toJson(responseData);
-    }
+    }*/
     
     @POST
     @Path("order/status")
@@ -91,6 +98,7 @@ public class Conversion {
     @Produces(MediaType.APPLICATION_JSON)
     public String getOrderStatus(RequestWithToken requestData, @Context HttpServletRequest req) {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
+        logger.info("依頼状況取得開始");
         OrderStatusResponse responseData = new OrderStatusResponse();
         Gson gson = new Gson();
         
@@ -106,16 +114,19 @@ public class Conversion {
                 throw new CustomException(StatusCode.NeedLogin);
             }
             
-            List<OrdersEntity> orders = orderService.getOrders((long)session.getAttribute("userId"));
+            List<OrdersEntity> orders = orderService.getOrdersEntityEndDateNull((long)session.getAttribute("userId"));
             
+            //変換未完了の依頼が存在しない
             if(orders.size() == 0) {
                 responseData.setResult(StatusCode.NoOrder);
                 return gson.toJson(responseData);
             }
             
             for(OrdersEntity order : orders) {
+                //変換未完了かつ決済がまだ済んでいない
                 if(order.getPaymentDate() == null) {
                     responseData.setOrderId(order.getOrderId());
+                    
                     if(order.getSrcStorage() == 0) {
                         //srcがアップロードされていない
                         if(order.getDstStorage() == 0) {
@@ -125,6 +136,7 @@ public class Conversion {
                         } else {
                             //srcがアップロードされていないかつdstがアップロードされている
                             responseData.setResult(StatusCode.DstVideoUploaded);
+                            responseData.setDstDuration(order.getDstDuration());
                             return gson.toJson(responseData);
                         }
                     } else {
@@ -132,13 +144,17 @@ public class Conversion {
                         if(order.getDstStorage() == 0) {
                             //srcがアップロードされているかつdstがアップロードされていない
                             responseData.setResult(StatusCode.SrcVideoUploaded);
+                            responseData.setSrcDuration(order.getSrcDuration());
                             return gson.toJson(responseData);
                         } else {
                             //src,dstがアップロードされている
-                            responseData.setResult(StatusCode.VideosNotUploaded);
+                            responseData.setResult(StatusCode.VideosUploaded);
+                            responseData.setDstDuration(order.getDstDuration());
+                            responseData.setSrcDuration(order.getSrcDuration());
                             return gson.toJson(responseData);
                         }
-                    } 
+                    }
+                    
                 }
             }
             responseData.setResult(StatusCode.CompleteOrder);
@@ -148,8 +164,11 @@ public class Conversion {
         } catch(RuntimeException e) {
             responseData.setResult(StatusCode.Failure);
             logger.info("依頼状況取得失敗");
-            e.printStackTrace();
+            e.printStackTrace(); 
         }
+        
+        logger.info("依頼状況取得完了");
+        logger.info("result : " + responseData.getResult());
         
         return gson.toJson(responseData);
     }
@@ -176,13 +195,12 @@ public class Conversion {
             }
             
             orderService.create((long)session.getAttribute("userId"));
-            responseData.setResult(StatusCode.Failure);
+            responseData.setResult(StatusCode.Success);
         } catch(CustomException e) {
             responseData.setResult(e.getCode());
             e.printStackTrace();
         } catch(RuntimeException e) {
             responseData.setResult(StatusCode.Failure);
-            logger.info("依頼状況取得失敗");
             e.printStackTrace();
         }
         
@@ -190,6 +208,271 @@ public class Conversion {
         
     }
     
+    @POST
+    @Path("order/plan")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String setPlan(SetPlanRequest requestData, @Context HttpServletRequest req) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion.setPlan");
+        logger.info("プラン変更開始");
+        SetPlanResponse responseData = new SetPlanResponse();
+        Gson gson = new Gson();
+        
+        logger.info("オーダーID : " +  requestData.getOrderId());
+        logger.info("プラン : " + requestData.getPlan());
+        
+        try {
+            //トークンチェック
+            HttpSession session = req.getSession(false);
+            if(session == null) {
+                logger.info("セッションが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            if(!(session.getAttribute("token").equals(requestData.getToken()))){
+                logger.info("トークンが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            
+            orderService.setPlan(requestData.getOrderId(), requestData.getPlan());
+            responseData.setAmount(orderService.getAmount(requestData.getOrderId()));
+            responseData.setResult(StatusCode.Success);
+        } catch(CustomException e) {
+            responseData.setResult(e.getCode());
+            e.printStackTrace();
+        } catch(RuntimeException e) {
+            logger.info("プラン変更失敗");
+            responseData.setResult(StatusCode.Failure);
+            e.printStackTrace();
+        }
+        
+        return gson.toJson(responseData);
+    }
+    
+    @POST
+    @Path("order/amount")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getAmount(GetAmountRequest requestData, @Context HttpServletRequest req) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
+        GetAmountResponse responseData = new GetAmountResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //トークンチェック
+            HttpSession session = req.getSession(false);
+            if(session == null) {
+                logger.info("セッションが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            if(!(session.getAttribute("token").equals(requestData.getToken()))){
+                logger.info("トークンが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            
+            OrdersEntity order = orderService.getOrderByOrderId(requestData.getOrderId());
+            responseData.setAmount(orderService.getAmount(requestData.getOrderId()));
+            responseData.setResult(StatusCode.Success);
+        } catch(CustomException e) {
+            responseData.setResult(e.getCode());
+            e.printStackTrace();
+        } catch(RuntimeException e) {
+            responseData.setResult(StatusCode.Failure);
+            e.printStackTrace();
+        }
+        
+        return gson.toJson(responseData);
+    }
+    
+    @POST
+    @Path("order/srcFile")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String setSrcVideo(@FormDataParam("token") String token,
+                              @FormDataParam("srcFile") InputStream originSrcFile,
+                              @FormDataParam("duration") int duration,
+                              @FormDataParam("orderId") long orderId,
+                              @Context HttpServletRequest req) throws IOException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
+        InputStream srcFile = null;
+        StatusResponse responseData = new StatusResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //トークンチェック
+            HttpSession session = req.getSession(false);
+            if(session == null) {
+                logger.info("セッションが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            if(!(session.getAttribute("token").equals(token))){
+                logger.info("トークンが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            
+            //データチェック
+            if(originSrcFile == null) {
+                logger.info("srcFileがnullです");
+                throw new CustomException(StatusCode.NoSrcVideo);
+            }
+            
+            java.nio.file.Path srcTmpFile =  StreamConverter.getTmpFile(originSrcFile);
+            
+            //ウイルスチェック
+            if(VirusChecker.isVirus(srcTmpFile)) {
+                //ウイルス検知
+                throw new CustomException(StatusCode.VirusFound);
+            }
+            
+            srcFile = StreamConverter.getInputStreamDeleteOnClose(srcTmpFile);
+            
+            orderService.uploadSrcVideo(srcFile, orderId, duration);
+            responseData.setResult(StatusCode.Success);
+        } catch(IOException e) {
+            responseData.setResult(StatusCode.Failure);
+            e.printStackTrace();
+        } catch(CustomException e) {
+            responseData.setResult(e.getCode());
+        } catch(RuntimeException e) {
+            responseData.setResult(StatusCode.Failure);
+            e.printStackTrace();
+        } finally {
+            if(srcFile != null) {
+                srcFile.close();
+            }
+        }
+        
+        return gson.toJson(responseData);
+    } 
+    
+    @POST
+    @Path("order/dstFile")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String setDstVideo(@FormDataParam("token") String token,
+                              @FormDataParam("dstFile") InputStream originDstFile,
+                              @FormDataParam("duration") int duration,
+                              @FormDataParam("orderId") long orderId,
+                              @Context HttpServletRequest req) throws IOException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
+        InputStream dstFile = null;
+        StatusResponse responseData = new StatusResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //トークンチェック
+            HttpSession session = req.getSession(false);
+            if(session == null) {
+                logger.info("セッションが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            if(!(session.getAttribute("token").equals(token))){
+                logger.info("トークンが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            
+            //データチェック
+            if(originDstFile == null) {
+                logger.info("dstFileがnullです");
+                throw new CustomException(StatusCode.NoDstVideo);
+            }
+            
+            java.nio.file.Path dstTmpFile =  StreamConverter.getTmpFile(originDstFile);
+            
+            //ウイルスチェック
+            if(VirusChecker.isVirus(dstTmpFile)) {
+                //ウイルス検知
+                throw new CustomException(StatusCode.VirusFound);
+            }
+            
+            dstFile = StreamConverter.getInputStreamDeleteOnClose(dstTmpFile);
+            
+            orderService.uploadDstVideo(dstFile, orderId, duration);
+            responseData.setResult(StatusCode.Success);
+        } catch(IOException e) {
+            responseData.setResult(StatusCode.Failure);
+            e.printStackTrace();
+        } catch(CustomException e) {
+            responseData.setResult(e.getCode());
+        } catch(RuntimeException e) {
+            responseData.setResult(StatusCode.Failure);
+            e.printStackTrace();
+        } finally {
+            if(dstFile != null) {
+                dstFile.close();
+            }
+        }
+        
+        return gson.toJson(responseData);
+    } 
+    
+    @POST
+    @Path("delete/srcFile") 
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String deleteSrcFile(DeleteVideoRequest requestData, @Context HttpServletRequest req) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
+        StatusResponse responseData = new StatusResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //トークンチェック
+            HttpSession session = req.getSession(false);
+            if(session == null) {
+                logger.info("セッションが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            if(!(session.getAttribute("token").equals(requestData.getToken()))){
+                logger.info("トークンが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            
+            orderService.deleteSrcFile(requestData.getOrderId());
+            responseData.setResult(StatusCode.Success);
+        } catch(CustomException e) {
+            responseData.setResult(e.getCode());
+        } catch(RuntimeException e) {
+            responseData.setResult(StatusCode.Failure);
+            e.printStackTrace();
+        }
+        
+        return gson.toJson(responseData);
+    }  
+    
+    @POST
+    @Path("delete/dstFile") 
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String deleteDstFile(DeleteVideoRequest requestData, @Context HttpServletRequest req) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
+        StatusResponse responseData = new StatusResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //トークンチェック
+            HttpSession session = req.getSession(false);
+            if(session == null) {
+                logger.info("セッションが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            if(!(session.getAttribute("token").equals(requestData.getToken()))){
+                logger.info("トークンが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            
+            orderService.deleteDstFile(requestData.getOrderId());
+            responseData.setResult(StatusCode.Success);
+        } catch(CustomException e) {
+            responseData.setResult(e.getCode());
+        } catch(RuntimeException e) {
+            responseData.setResult(StatusCode.Failure);
+            e.printStackTrace();
+        }
+        
+        return gson.toJson(responseData);
+    } 
+    
+    
+    /*
     
     @POST
     @Path("order")
@@ -271,21 +554,5 @@ public class Conversion {
         }
         
         return gson.toJson(responseData);
-    }
-    
-    /*@POST
-    @Path("status")
-    @Produces(MediaType.APPLICATION_JSON) 
-    public String conversionStatus(@Context HttpServletRequest req) {
-        //トークンチェック
-            HttpSession session = req.getSession(false);
-            if(session == null) {
-                logger.info("セッションが存在しません");
-                throw new CustomException(StatusCode.NeedLogin);
-            }
-            if(!(session.getAttribute("token").equals(token))){
-                logger.info("トークンが存在しません");
-                throw new CustomException(StatusCode.NeedLogin);
-            }
     }*/
 }

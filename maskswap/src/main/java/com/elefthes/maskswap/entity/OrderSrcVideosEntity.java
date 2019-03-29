@@ -10,13 +10,17 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "order_src_videos")
 @IdClass(OrderVideoId.class)
-@NamedQuery(name = "OrderSrcVideos.byId", query = "SELECT o FROM OrderSrcVideosEntity o WHERE o.orderId = :orderId AND o.storageOrder = :storageOrder")
+@NamedQueries({
+    @NamedQuery(name = "OrderSrcVideos.byId", query = "SELECT o FROM OrderSrcVideosEntity o WHERE o.orderId = :orderId AND o.storageOrder = :storageOrder"),
+    @NamedQuery(name = "OrderSrcVideos.deleteByOrderId", query = "DELETE FROM OrderSrcVideosEntity o WHERE o.orderId = :orderId")
+})
 public class OrderSrcVideosEntity implements Serializable{
     private static final long serialVersionUID = 1L;
     

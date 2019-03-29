@@ -21,7 +21,11 @@ public enum StatusCode {
     VideosNotUploaded(17),
     SrcVideoUploaded(18),
     DstVideoUploaded(19),
-    VideosUploaded(20);
+    VideosUploaded(20),
+    OrderAlreadyExist(21),
+    NoPlan(22),
+    VideoAlreadyExist(23);
+    
     
     
     

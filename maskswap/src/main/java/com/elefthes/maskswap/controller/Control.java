@@ -69,7 +69,7 @@ public class Control {
                 throw new AdminCustomException(AdminStatusCode.Failure);
             }
             
-            OrdersEntity order = orderService.getConvertOrder();
+            OrdersEntity order = orderService.getConvertOrder(adminService.getTypeId(requestData.getEmail()));
             String orderDate = DateFormatter.convertSlash(new Date(order.getOrderDate().getTime()));
             int plan = order.getTypeId();
             
@@ -196,7 +196,8 @@ public class Control {
                 throw new AdminCustomException(AdminStatusCode.VirusFound);
             }
             
-            if(orderId != 0) {
+            if(orderId == 0) {
+                logger.info("orderIdが存在しない");
                 throw new AdminCustomException(AdminStatusCode.Failure);
             }
             
@@ -206,6 +207,7 @@ public class Control {
         } catch(AdminCustomException e) {
             responseData.setResult(e.getCode());
         } catch(RuntimeException e) {
+            e.printStackTrace();
             responseData.setResult(AdminStatusCode.Failure);
         } finally {
             if(completedVideo != null) {

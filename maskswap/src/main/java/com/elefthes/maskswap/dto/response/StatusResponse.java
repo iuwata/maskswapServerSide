@@ -14,4 +14,9 @@ public class StatusResponse {
     public void setResult(StatusCode result) {
         this.result = result.getId();
     }
+
+    public int getResult() {
+        return result;
+    }
+    
 }

@@ -11,11 +11,13 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "completed_videos")
 @IdClass(OrderVideoId.class)
+@NamedQuery(name = "CompletedVideoEntity.deleteByOrderId", query = "DELETE FROM CompletedVideosEntity c WHERE c.orderId = :orderId")
 public class CompletedVideosEntity implements Serializable{
     private static final long serialVersionUID = 1L;
     

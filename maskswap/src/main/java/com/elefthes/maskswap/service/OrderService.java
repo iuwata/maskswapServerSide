@@ -1,7 +1,10 @@
 package com.elefthes.maskswap.service;
 
 import com.elefthes.maskswap.dto.request.OrderConversionRequest;
+import com.elefthes.maskswap.entity.OrderDstVideosEntity;
+import com.elefthes.maskswap.entity.OrderSrcVideosEntity;
 import com.elefthes.maskswap.entity.OrdersEntity;
+import com.elefthes.maskswap.exception.CustomException;
 import com.elefthes.maskswap.util.AdminStatusCode;
 import com.elefthes.maskswap.util.DateFormatter;
 import com.elefthes.maskswap.util.StatusCode;
@@ -40,9 +43,16 @@ public class OrderService {
         return result;
     }
     
+    public List<OrdersEntity> getOrdersEntityEndDateNull(long userId) {
+        List<OrdersEntity> result = entityManager.createNamedQuery("Orders.endDateNull", OrdersEntity.class)
+                                            .setParameter("userId", userId).getResultList();
+        return result;
+    }
+    
     //@Transactional
-    public OrdersEntity getConvertOrder() throws IOException, NoResultException {
+    public OrdersEntity getConvertOrder(int typeId) throws IOException, NoResultException {
         OrdersEntity result = entityManager.createNamedQuery("Orders.orderById", OrdersEntity.class)
+                                        .setParameter("typeId", typeId)
                                         .setFirstResult(0)
                                         .setMaxResults(1).getSingleResult();
         return result;
@@ -71,8 +81,57 @@ public class OrderService {
     }
     
     @Transactional
+    public void setPlan(long orderId, int plan) {
+        if(plan == 0) {
+            throw new CustomException(StatusCode.NoPlan);
+        }
+        OrdersEntity order = this.getOrderByOrderId(orderId);
+        order.setTypeId(plan);
+        entityManager.persist(order);
+        entityManager.flush();
+    }
+    
+    @Transactional 
+    public int getAmount(long orderId) {
+        OrdersEntity order = this.getOrderByOrderId(orderId);
+        
+        if(order.getTypeId() == null) {
+            throw new CustomException(StatusCode.NoPlan);
+        }
+        int duration;
+        if(order.getDstDuration() == null) {
+            throw new CustomException(StatusCode.NoDstVideo);
+        } else {
+            duration = order.getDstDuration();
+        }
+        int amount = 0;
+        switch(order.getTypeId()) {
+            case 1 : //スタンダード
+                //追加金
+                if(duration > 15) {
+                    amount += ((duration - 15) / 10 + 1) * 100;
+                }
+                break;
+            case 2 : //プレミアム
+                //基本価格
+                amount += 300;
+                //追加金
+                if(duration > 15) {
+                    amount += ((duration - 15) / 10 + 1) * 150;
+                }
+                break;
+        }
+        
+        return amount;
+    }
+    
+    @Transactional
     public long create(long userId) {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.OrderService");
+        
+        if(this.getOrdersEntityEndDateNull(userId).size() != 0) {
+            throw new CustomException(StatusCode.OrderAlreadyExist);
+        }
         
         OrdersEntity order = new OrdersEntity();
         order.setUserId(userId);
@@ -86,6 +145,56 @@ public class OrderService {
         return orderId;
     }
     
+    @Transactional
+    public void uploadSrcVideo(InputStream srcFile, long orderId, int duration) throws IOException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.service.OrderService");
+        
+        OrdersEntity order = this.getOrderByOrderId(orderId);
+        
+        if(order.getSrcStorage() != 0) {
+            throw new CustomException(StatusCode.VideoAlreadyExist);
+        }
+        
+        int srcStorage = orderVideoService.uploadSrcVideo(srcFile, orderId, order.getUserId());
+        
+        order.setSrcStorage(srcStorage);
+        order.setSrcDuration(duration);
+        entityManager.persist(order);
+        entityManager.flush();
+    }
+    
+    @Transactional
+    public void uploadDstVideo(InputStream dstFile, long orderId, int duration) throws IOException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.service.OrderService");
+        
+        OrdersEntity order = this.getOrderByOrderId(orderId);
+        
+        if(order.getDstStorage() != 0) {
+            throw new CustomException(StatusCode.VideoAlreadyExist);
+        }
+        
+        int dstStorage = orderVideoService.uploadDstVideo(dstFile, orderId, order.getUserId());
+        
+        order.setDstStorage(dstStorage);
+        order.setDstDuration(duration);
+        entityManager.persist(order);
+        entityManager.flush();
+    }
+    
+    @Transactional 
+    public void deleteSrcFile(long orderId) {
+        entityManager.createNamedQuery("OrderSrcVideosEntity.deleteByOrderId", OrderSrcVideosEntity.class)
+                        .setParameter("orderId", orderId)
+                        .executeUpdate();
+    }
+    
+    @Transactional 
+    public void deleteDstFile(long orderId) {
+        entityManager.createNamedQuery("OrderDstVideosEntity.deleteByOrderId", OrderDstVideosEntity.class)
+                        .setParameter("orderId", orderId)
+                        .executeUpdate();
+    }
+    /*
     
     @Transactional
     public long create(InputStream srcFile, 
@@ -121,6 +230,6 @@ public class OrderService {
         entityManager.flush();
         logger.info("Conversion5");
         return orderId;
-    }
+    }*/
     
 }

@@ -3,6 +3,8 @@ package com.elefthes.maskswap.service;
 import com.elefthes.maskswap.entity.AdminsEntity;
 import com.elefthes.maskswap.entity.CompletedVideosEntity;
 import com.elefthes.maskswap.entity.OrdersEntity;
+import com.elefthes.maskswap.exception.AdminCustomException;
+import com.elefthes.maskswap.util.AdminStatusCode;
 import com.elefthes.maskswap.util.SafePassword;
 import com.elefthes.maskswap.util.StreamConverter;
 import java.io.IOException;
@@ -37,11 +39,29 @@ public class AdminService {
         } 
     }
     
+    public int getTypeId(String email) {
+        AdminsEntity result = entityManager.createNamedQuery("Admins.byEmail", AdminsEntity.class)
+                                        .setParameter("email", email).getSingleResult();
+        if(result.getTypeId() == null) {
+            throw new AdminCustomException(AdminStatusCode.Failure);
+        }
+        return result.getTypeId();
+    }
+
+    @Transactional
+    public void deleteCompletedVideo(long orderId) {
+        entityManager.createNamedQuery("CompletedVideoEntity.deleteByOrderId", CompletedVideosEntity.class)
+                .setParameter("orderId", orderId)
+                .executeUpdate();
+    }
+    
     @Transactional
     public void uploadCompletedVide(InputStream completedVideo, long orderId) throws IOException {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.AdminService");
         
         OrdersEntity order = orderService.getOrderByOrderId(orderId);
+
+        this.deleteCompletedVideo(orderId);
         
         int bufferLength = 1024 * 128;
         

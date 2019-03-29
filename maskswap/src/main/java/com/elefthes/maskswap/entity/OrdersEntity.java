@@ -7,8 +7,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -16,8 +14,9 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "orders")
 @NamedQueries({
+    @NamedQuery(name = "Orders.endDateNull", query = "SELECT o FROM OrdersEntity o WHERE o.userId = :userId AND o.endDate IS NULL"),
     @NamedQuery(name = "Orders.byUserId", query = "SELECT o FROM OrdersEntity o WHERE o.userId = :userId"),
-    @NamedQuery(name = "Orders.orderById", query = "SELECT o FROM OrdersEntity o WHERE o.paymentDate IS NOT NULL AND o.isConverting = 0 ORDER BY o.typeId desc, o.paymentDate asc"),
+    @NamedQuery(name = "Orders.orderById", query = "SELECT o FROM OrdersEntity o WHERE o.paymentDate IS NOT NULL AND o.isConverting = 0 AND o.typeId = :typeId ORDER BY o.paymentDate asc"),
     @NamedQuery(name = "Orders.byOrderId", query = "SELECT o FROM OrdersEntity o WHERE o.orderId = :orderId")
 })
 public class OrdersEntity implements Serializable{
@@ -28,14 +27,11 @@ public class OrdersEntity implements Serializable{
     @Column(name = "order_id")
     private long orderId;
     
-    //@ManyToOne
-    //@JoinColumn(name = "user_id", referencedColumnName = "user_id")
     @Column(name = "user_id")
-    //private UsersEntity user;
-    long userId;
+    private long userId;
     
     @Column(name = "type_id")
-    int typeId;
+    private Integer typeId;
     
     @Column(name = "progress")
     private int progress;
@@ -60,6 +56,12 @@ public class OrdersEntity implements Serializable{
     
     @Column(name = "completed_storage")
     private int completedStorage;
+    
+    @Column(name = "src_duration")
+    private Integer srcDuration;
+    
+    @Column(name = "dst_duration")
+    private Integer dstDuration;
 
     public long getOrderId() {
         return orderId;
@@ -69,14 +71,6 @@ public class OrdersEntity implements Serializable{
         this.orderId = orderId;
     }
 
-    /*public UsersEntity getUser() {
-        return user;
-    }
-
-    public void setUser(UsersEntity user) {
-        this.user = user;
-    }*/
-
     public long getUserId() {
         return userId;
     }
@@ -85,7 +79,7 @@ public class OrdersEntity implements Serializable{
         this.userId = userId;
     }
 
-    public int getTypeId() {
+    public Integer getTypeId() {
         return typeId;
     }
 
@@ -155,5 +149,21 @@ public class OrdersEntity implements Serializable{
 
     public void setCompletedStorage(int completedStorage) {
         this.completedStorage = completedStorage;
+    }
+
+    public void setSrcDuration(int srcDuration) {
+        this.srcDuration = srcDuration;
+    }
+
+    public Integer getSrcDuration() {
+        return srcDuration;
+    }
+
+    public Integer getDstDuration() {
+        return dstDuration;
+    }
+
+    public void setDstDuration(int dstDuration) {
+        this.dstDuration = dstDuration;
     }
 }
