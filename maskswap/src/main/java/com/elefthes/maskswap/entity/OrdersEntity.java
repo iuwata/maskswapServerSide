@@ -62,6 +62,12 @@ public class OrdersEntity implements Serializable{
     
     @Column(name = "dst_duration")
     private Integer dstDuration;
+    
+    @Column(name = "src_face_storage")
+    private int srcFaceStorage;
+    
+    @Column(name = "dst_face_storage")
+    private int dstFaceStorage;
 
     public long getOrderId() {
         return orderId;
@@ -151,12 +157,12 @@ public class OrdersEntity implements Serializable{
         this.completedStorage = completedStorage;
     }
 
-    public void setSrcDuration(int srcDuration) {
-        this.srcDuration = srcDuration;
-    }
-
     public Integer getSrcDuration() {
         return srcDuration;
+    }
+
+    public void setSrcDuration(int srcDuration) {
+        this.srcDuration = srcDuration;
     }
 
     public Integer getDstDuration() {
@@ -165,5 +171,21 @@ public class OrdersEntity implements Serializable{
 
     public void setDstDuration(int dstDuration) {
         this.dstDuration = dstDuration;
+    }
+
+    public int getSrcFaceStorage() {
+        return srcFaceStorage;
+    }
+
+    public void setSrcFaceStorage(int srcFaceStorage) {
+        this.srcFaceStorage = srcFaceStorage;
+    }
+
+    public int getDstFaceStorage() {
+        return dstFaceStorage;
+    }
+
+    public void setDstFaceStorage(int dstFaceStorage) {
+        this.dstFaceStorage = dstFaceStorage;
     }
 }

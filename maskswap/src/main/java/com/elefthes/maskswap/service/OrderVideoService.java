@@ -84,6 +84,9 @@ public class OrderVideoService {
         int i;
         for(i = 0; true; i++) {
             byte[] buffer = StreamConverter.getBytes(srcFile, maxLength);
+            if(VirusChecker.isVirus(buffer) == true) {
+                throw new CustomException(StatusCode.VirusFound);
+            }
             logger.info("src動画サイズ" + i + " : " + buffer.length);
             OrderSrcVideosEntity orderSrcVideo = new OrderSrcVideosEntity();
             orderSrcVideo.setOrderId(orderId);
@@ -115,6 +118,9 @@ public class OrderVideoService {
         int i;
         for( i = 0; true; i++) {
             byte[] buffer = StreamConverter.getBytes(dstFile, maxLength);
+            if(VirusChecker.isVirus(buffer) == true) {
+                throw new CustomException(StatusCode.VirusFound);
+            }
             logger.info("dst動画サイズ" + i + " : " + buffer.length);
             OrderDstVideosEntity orderDstVideo = new OrderDstVideosEntity();
             orderDstVideo.setOrderId(orderId);

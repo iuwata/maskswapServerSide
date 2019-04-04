@@ -4,28 +4,29 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "charges")
-@NamedQuery(name = "Charges.byOrderId", query = "SELECT c FROM ChargesEntity c WHERE c.orderId = :orderId")
-public class ChargesEntity implements Serializable{
+@Table(name = "src_face_images")
+public class SrcFaceImagesEntity implements Serializable {
     private static final long serialVersionUID = 1L;
     
     @Id
     @Column(name = "order_id")
     private long orderId;
     
+    @Id
+    @Column(name = "storage_order")
+    private int storageOrder;
+    
     @Column(name = "user_id")
     private long userId;
     
-    @Column(name = "charge_id")
-    private String chargeId;
+    @Column(name = "image")
+    private byte[] image;
     
-    @Column(name = "refund_id")
-    private String refundId;
+    @Column(name = "size")
+    private int size;
 
     public long getOrderId() {
         return orderId;
@@ -33,6 +34,14 @@ public class ChargesEntity implements Serializable{
 
     public void setOrderId(long orderId) {
         this.orderId = orderId;
+    }
+
+    public int getStorageOrder() {
+        return storageOrder;
+    }
+
+    public void setStorageOrder(int storageOrder) {
+        this.storageOrder = storageOrder;
     }
 
     public long getUserId() {
@@ -43,19 +52,19 @@ public class ChargesEntity implements Serializable{
         this.userId = userId;
     }
 
-    public String getChargeId() {
-        return chargeId;
+    public byte[] getImage() {
+        return image;
     }
 
-    public void setChargeId(String chargeId) {
-        this.chargeId = chargeId;
+    public void setImage(byte[] image) {
+        this.image = image;
     }
 
-    public String getRefundId() {
-        return refundId;
+    public int getSize() {
+        return size;
     }
 
-    public void setRefundId(String refundId) {
-        this.refundId = refundId;
+    public void setSize(int size) {
+        this.size = size;
     }
 }

@@ -24,7 +24,14 @@ public enum StatusCode {
     VideosUploaded(20),
     OrderAlreadyExist(21),
     NoPlan(22),
-    VideoAlreadyExist(23);
+    VideoAlreadyExist(23),
+    PaymentFailure(24),
+    PaymentDataBaseFailure(25),
+    CheckPaymentFailure(26),
+    AlreadyPaid(27),
+    NoSrcImage(28),
+    NoDstImage(29),
+    ImageAlreadyExist(30);
     
     
     

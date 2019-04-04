@@ -1,6 +1,7 @@
 package com.elefthes.maskswap.util;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -40,9 +41,9 @@ public class VirusChecker {
             BufferedInputStream bis = new BufferedInputStream(is);
 
             ClamavClient client = new ClamavClient("localhost");
-            ScanResult scanSrcResult = client.scan(bis);
+            ScanResult scanResult = client.scan(bis);
             bis.close();
-            if(scanSrcResult instanceof ScanResult.VirusFound) {
+            if(scanResult instanceof ScanResult.VirusFound) {
                 logger.info("ウイルスが見つかりました");
                 return true;
             }
@@ -53,5 +54,24 @@ public class VirusChecker {
                 is.close();
             }
         }
+    }
+    
+    public static boolean isVirus(byte[] target) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.util.VirusChecker");
+        
+        int maxLength = 1024 * 128; //128kb
+        
+        ByteArrayInputStream is = new ByteArrayInputStream(target);
+        BufferedInputStream bis = new BufferedInputStream(is, maxLength);
+        
+        ClamavClient client = new ClamavClient("localhost");
+        ScanResult result = client.scan(is);
+        
+        if(result instanceof ScanResult.VirusFound) {
+            logger.info("ウイルスが見つかりました");
+            return true;
+        }
+        
+        return false;
     }
 }
