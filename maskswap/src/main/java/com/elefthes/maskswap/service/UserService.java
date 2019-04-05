@@ -42,6 +42,13 @@ public class UserService {
     }
     
     @Transactional
+    public void authenticate(UsersEntity user) {
+        user.setAuthentication(true);
+        entityManager.persist(user);
+        entityManager.flush();
+    }
+    
+    //@Transactional
     public void authenticateEmail(long userId, String authenticationCode) throws CustomException{
         UsersEntity user = this.getUser(userId);
         
@@ -58,9 +65,7 @@ public class UserService {
         
         //認証コードを確認
         if(user.getAuthenticationCode() == authenticationCode) {
-            user.setAuthentication(true);
-            entityManager.persist(user);
-            entityManager.flush();
+            this.authenticate(user);
         } else {
             throw new CustomException(StatusCode.IncorrectAuthenticationCode);
         }
@@ -96,7 +101,7 @@ public class UserService {
     
     @Transactional
     public long create(String email, String password) throws NoSuchAlgorithmException, CustomException{
-        //パスワードが使用可能か判定
+        /*//パスワードが使用可能か判定
         if(!PasswordChecker.isPasswordAvailable(password)) { //使用不可能の場合
             throw new CustomException(StatusCode.IncompletePassword);
         }
@@ -108,7 +113,7 @@ public class UserService {
             case IncompleteEmail: 
                 //メールアドレスではない
                 throw new CustomException(StatusCode.IncompleteEmail);
-        }
+        }*/
         
         //パスワードの暗号化
         String salt = SafePassword.getSalt();
@@ -138,3 +143,4 @@ public class UserService {
         return user.getUserId();
     }
 }
+

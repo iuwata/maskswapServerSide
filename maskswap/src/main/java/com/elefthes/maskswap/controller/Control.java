@@ -1,6 +1,7 @@
 package com.elefthes.maskswap.controller;
 
 import com.elefthes.maskswap.dto.request.FindOrderByAdminRequest;
+import com.elefthes.maskswap.dto.request.GetImageByAdminRequest;
 import com.elefthes.maskswap.dto.request.GetVideoByAdminRequest;
 import com.elefthes.maskswap.dto.request.UpdateProgressByAdminRequest;
 import com.elefthes.maskswap.dto.response.AdminStatusResponse;
@@ -10,6 +11,8 @@ import com.elefthes.maskswap.dto.response.StatusResponse;
 import com.elefthes.maskswap.entity.OrdersEntity;
 import com.elefthes.maskswap.exception.AdminCustomException;
 import com.elefthes.maskswap.service.AdminService;
+import com.elefthes.maskswap.service.FaceImageService;
+import com.elefthes.maskswap.service.ImageStreamingOutput;
 import com.elefthes.maskswap.service.OrderService;
 import com.elefthes.maskswap.service.OrderVideoService;
 import com.elefthes.maskswap.service.VideoStreamingOutput;
@@ -50,6 +53,9 @@ public class Control {
     
     @Inject 
     OrderVideoService orderVideoService;
+    
+    @Inject
+    FaceImageService faceImageService;
     
     @POST
     @Path("m2swetg3j4i8sh3vy794g6z2")
@@ -130,6 +136,54 @@ public class Control {
         StreamingOutput fileStream = new VideoStreamingOutput(requestData.getOrderId(), is);
         
         return Response.ok(fileStream).build();
+    }
+    
+    @POST
+    @Path("6uqipameruhvwngbyte8nxjs")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces("image/png")
+    public Response getSrcImage(GetImageByAdminRequest requestData) throws IOException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Control");
+        //ログインチェック
+        if(adminService.login(requestData.getEmail(), requestData.getPassword()) == false) {
+            //失敗時の処理
+            logger.info("アドミンログイン失敗");
+            throw new AdminCustomException(AdminStatusCode.Failure);
+        }
+        
+        long orderId = requestData.getOrderId();
+        int storage = orderService.getOrderByOrderId(orderId).getSrcFaceStorage();
+        if(storage != 0) {
+            InputStream is = faceImageService.getSrcFaceImage(orderId, storage);
+            StreamingOutput fileStream = new ImageStreamingOutput(orderId, is);
+            return Response.ok(fileStream).build();
+        } else {
+            throw new AdminCustomException(AdminStatusCode.Failure);
+        }
+    }
+    
+    @POST
+    @Path("pcht2vx43h7ufftsnz39gmyw")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces("image/png")
+    public Response getDstImage(GetImageByAdminRequest requestData) throws IOException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Control");
+        //ログインチェック
+        if(adminService.login(requestData.getEmail(), requestData.getPassword()) == false) {
+            //失敗時の処理
+            logger.info("アドミンログイン失敗");
+            throw new AdminCustomException(AdminStatusCode.Failure);
+        }
+        
+        long orderId = requestData.getOrderId();
+        int storage = orderService.getOrderByOrderId(orderId).getDstFaceStorage();
+        if(storage != 0) {
+            InputStream is = faceImageService.getDstFaceImage(orderId, storage);
+            StreamingOutput fileStream = new ImageStreamingOutput(orderId, is);
+            return Response.ok(fileStream).build();
+        } else {
+            throw new AdminCustomException(AdminStatusCode.Failure);
+        }
     }
     
     @POST

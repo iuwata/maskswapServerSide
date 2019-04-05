@@ -143,9 +143,9 @@ public class OrderService {
     public long create(long userId) {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.OrderService");
         
-        if(this.getOrdersEntityEndDateNull(userId).size() != 0) {
+        /*if(this.getOrdersEntityEndDateNull(userId).size() != 0) {
             throw new CustomException(StatusCode.OrderAlreadyExist);
-        }
+        }*/
         
         OrdersEntity order = new OrdersEntity();
         order.setUserId(userId);

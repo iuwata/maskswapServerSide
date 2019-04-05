@@ -148,9 +148,9 @@ public class Conversion {
                 throw new CustomException(StatusCode.NeedLogin);
             }
             
-            /*if(orderService.getOrdersEntityEndDateNull((long)session.getAttribute("userId")).size() != 0) {
+            if(orderService.getOrdersEntityEndDateNull((long)session.getAttribute("userId")).size() != 0) {
                 throw new CustomException(StatusCode.OrderAlreadyExist);
-            }*/
+            }
             
             orderService.create((long)session.getAttribute("userId"));
             responseData.setResult(StatusCode.Success);
@@ -277,9 +277,9 @@ public class Conversion {
                 throw new CustomException(StatusCode.NoSrcVideo);
             }
             
-            /*if(orderService.getOrderByOrderId(orderId).getSrcStorage() != 0) {
+            if(orderService.getOrderByOrderId(orderId).getSrcStorage() != 0) {
                 throw new CustomException(StatusCode.VideoAlreadyExist);
-            }*/
+            }
             
             java.nio.file.Path srcTmpFile =  StreamConverter.getTmpFile(originSrcFile);
             

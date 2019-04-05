@@ -101,6 +101,26 @@ public class ChargeService {
     }
     
     @Transactional
+    public void addChargeToDataBase(long orderId, String chargeId) {
+        OrdersEntity order = orderService.getOrderByOrderId(orderId);
+
+            ChargesEntity chargeEntity;
+
+            List<ChargesEntity> result = this.getCharges(orderId);
+            if(result.size() == 0) {
+                chargeEntity =  new ChargesEntity();
+                chargeEntity.setOrderId(orderId);
+                chargeEntity.setUserId(order.getUserId());
+            } else {
+                chargeEntity = result.get(0);
+            }
+
+            chargeEntity.setChargeId(chargeId);
+            entityManager.persist(chargeEntity);
+            entityManager.flush();
+    }
+    
+    //@Transactional
     public Charge createCharge(long orderId, String stripeToken) {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.ChargeService.createCharge");
         Stripe.apiKey = API_KEY;
@@ -140,7 +160,7 @@ public class ChargeService {
         }
         
         try {
-            OrdersEntity order = orderService.getOrderByOrderId(orderId);
+            /*OrdersEntity order = orderService.getOrderByOrderId(orderId);
 
             ChargesEntity chargeEntity;
 
@@ -155,7 +175,8 @@ public class ChargeService {
 
             chargeEntity.setChargeId(charge.getId());
             entityManager.persist(chargeEntity);
-            entityManager.flush();
+            entityManager.flush();*/
+            this.addChargeToDataBase(orderId, charge.getId());
         } catch(RuntimeException e) {
             e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
@@ -164,7 +185,7 @@ public class ChargeService {
         return charge;
     }
     
-    @Transactional
+    //@Transactional
     public void captureCharge(long orderId, Charge charge) {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.ChargeService.captureCharge");
         Stripe.apiKey = API_KEY;
@@ -195,14 +216,24 @@ public class ChargeService {
         }
         
         try {
-            OrdersEntity order = orderService.getOrderByOrderId(orderId);
+            /*OrdersEntity order = orderService.getOrderByOrderId(orderId);
         
             order.setPaymentDate(new Timestamp(System.currentTimeMillis()));
             entityManager.persist(orderId);
-            entityManager.flush();
+            entityManager.flush();*/
+            this.completePayment(orderId);
         } catch(RuntimeException e) {
             throw new CustomException(StatusCode.PaymentDataBaseFailure);
         }
+    }
+    
+    @Transactional
+    private void completePayment(long orderId) {
+        OrdersEntity order = orderService.getOrderByOrderId(orderId);
+        
+        order.setPaymentDate(new Timestamp(System.currentTimeMillis()));
+        entityManager.persist(orderId);
+        entityManager.flush();
     }
     
     @Transactional

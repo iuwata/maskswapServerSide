@@ -4,10 +4,15 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "dst_face_images")
+@NamedQueries({
+    @NamedQuery(name = "DstFaceImages.byId", query = "SELECT d FROM DstFaceImagesEntity d WHERE d.orderId = :orderId AND d.storageOrder = :storage")
+})
 public class DstFaceImagesEntity implements Serializable{
     private static final long serialVersionUID = 1L;
     

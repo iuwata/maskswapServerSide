@@ -32,7 +32,7 @@ public class OrderVideoService {
     @PersistenceContext(unitName = "maskswapGeneral")
     private EntityManager entityManager;  
     
-    @Transactional
+    //@Transactional
     public InputStream getSrcVideo(long orderId, int storage) throws IOException {
         Path tmpPath = Files.createTempFile(Paths.get(System.getProperty("java.io.tmpdir"), "maskswap"), null, null);
         OutputStream os = Files.newOutputStream(tmpPath);
@@ -53,7 +53,7 @@ public class OrderVideoService {
         return Files.newInputStream(tmpPath, StandardOpenOption.DELETE_ON_CLOSE);
     }
     
-    @Transactional
+    //@Transactional
     public InputStream getDstVideo(long orderId, int storage) throws IOException {
         Path tmpPath = Files.createTempFile(Paths.get(System.getProperty("java.io.tmpdir"), "maskswap"), null, null);
         OutputStream os = Files.newOutputStream(tmpPath);
@@ -85,6 +85,7 @@ public class OrderVideoService {
         for(i = 0; true; i++) {
             byte[] buffer = StreamConverter.getBytes(srcFile, maxLength);
             if(VirusChecker.isVirus(buffer) == true) {
+                logger.info("ウイルスが検知されました");
                 throw new CustomException(StatusCode.VirusFound);
             }
             logger.info("src動画サイズ" + i + " : " + buffer.length);
@@ -119,6 +120,7 @@ public class OrderVideoService {
         for( i = 0; true; i++) {
             byte[] buffer = StreamConverter.getBytes(dstFile, maxLength);
             if(VirusChecker.isVirus(buffer) == true) {
+                logger.info("ウイルスが検知されました");
                 throw new CustomException(StatusCode.VirusFound);
             }
             logger.info("dst動画サイズ" + i + " : " + buffer.length);

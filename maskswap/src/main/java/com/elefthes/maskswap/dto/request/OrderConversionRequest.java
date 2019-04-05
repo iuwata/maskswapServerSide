@@ -1,6 +1,5 @@
 package com.elefthes.maskswap.dto.request;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 

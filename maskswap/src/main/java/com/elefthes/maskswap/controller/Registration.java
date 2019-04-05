@@ -4,6 +4,7 @@ import com.elefthes.maskswap.dto.request.RegistrationRequest;
 import com.elefthes.maskswap.dto.response.StatusResponse;
 import com.elefthes.maskswap.exception.CustomException;
 import com.elefthes.maskswap.service.UserService;
+import com.elefthes.maskswap.util.PasswordChecker;
 import com.elefthes.maskswap.util.SendMail;
 import com.elefthes.maskswap.util.StatusCode;
 import com.google.gson.Gson;
@@ -37,6 +38,19 @@ public class Registration {
         StatusResponse responseData = new StatusResponse();
         try {
             logger.info("Registration.P1");
+            //パスワードが使用可能か判定
+            if(!PasswordChecker.isPasswordAvailable(password)) { //使用不可能の場合
+                throw new CustomException(StatusCode.IncompletePassword);
+            }
+            //emailが使用可能か判定
+            switch(userService.EmailAvailable(email)) {
+                case EmailAlreadyExist:
+                    //emailが既に存在
+                    throw new CustomException(StatusCode.EmailAlreadyExist);
+                case IncompleteEmail: 
+                    //メールアドレスではない
+                    throw new CustomException(StatusCode.IncompleteEmail);
+            }
             long userId = userService.create(email, password);
             logger.info("Registration.P2");
             SendMail sendMail = new SendMail();
