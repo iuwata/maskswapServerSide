@@ -276,6 +276,9 @@ public class Conversion {
                 logger.info("srcFileがnullです");
                 throw new CustomException(StatusCode.NoSrcVideo);
             }
+            if(duration == 0) {
+                logger.info("durationが0す");
+            }
             
             if(orderService.getOrderByOrderId(orderId).getSrcStorage() != 0) {
                 throw new CustomException(StatusCode.VideoAlreadyExist);
@@ -335,6 +338,9 @@ public class Conversion {
             if(originDstFile == null) {
                 logger.info("dstFileがnullです");
                 throw new CustomException(StatusCode.NoDstVideo);
+            }
+            if(duration == 0) {
+                logger.info("durationが0です");
             }
             
             if(orderService.getOrderByOrderId(orderId).getDstStorage() != 0) {

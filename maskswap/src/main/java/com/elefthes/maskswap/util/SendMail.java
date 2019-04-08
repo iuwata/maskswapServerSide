@@ -22,8 +22,8 @@ public class SendMail {
     public class MailAuthenticator extends Authenticator {
             protected PasswordAuthentication getPasswordAutentication() {
                 //return new PasswordAuthentication("自分のメールアドレス", "パスワード");
-                //return new PasswordAuthentication("info@elefthes.com", "vaqVryGUzFHv");
-                return new PasswordAuthentication("info@maskswap.com", "$1QCqdj#");
+                return new PasswordAuthentication("info@elefthes.com", "vaqVryGUzFHv");
+                //return new PasswordAuthentication("info@maskswap.com", "$1QCqdj#");
             }
     }
     
@@ -43,8 +43,7 @@ public class SendMail {
         props.setProperty("mail.smtps.starttls.enable", "true");
         props.setProperty("mail.debug", "true");*/
         //props.setProperty("mail.smtp.host", "elefthes.com"); //SMTP
-        props.setProperty("mail.smtp.host", "maskswap.com");
-        //props.setProperty("mail.smtp.host", "202.172.28.12");
+        props.setProperty("mail.smtp.host", "202.172.28.12");
         //props.setProperty("mail.smtp.host", "smtp.gmail.com");
         props.setProperty("mail.smtp.port", "587"); //SMTPポート
         props.setProperty("mail.smtp.auth", "true"); //認証
@@ -61,8 +60,7 @@ public class SendMail {
         
         try {
             //送信元の設定
-            //Address addrFrom = new InternetAddress("info@elefthes.com");
-            Address addrFrom = new InternetAddress("info@maskswap.com");
+            Address addrFrom = new InternetAddress("info@elefthes.com");
             //Address addrFrom = new InternetAddress("iuwata0701@gmail.com", "Elefthes", ENCODE);
             message.setFrom(addrFrom);
             
@@ -81,8 +79,7 @@ public class SendMail {
             //message.setSentDate(new Date());
             logger.info("SendMail.P2");
             
-            //Transport.send(message, "info@elefthes.com", "vaqVryGUzFHv");
-            Transport.send(message, "info@maskswap.com", "$1QCqdj#");
+            Transport.send(message, "info@elefthes.com", "vaqVryGUzFHv");
             logger.info("SendMail.P3");
         } catch (AuthenticationFailedException e) {
             logger.info("例外1");
