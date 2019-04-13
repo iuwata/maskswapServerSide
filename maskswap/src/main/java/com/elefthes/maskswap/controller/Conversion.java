@@ -1,5 +1,6 @@
 package com.elefthes.maskswap.controller;
 
+import com.elefthes.maskswap.dto.request.CompleteFreeOrderRequest;
 import com.elefthes.maskswap.dto.request.CreateChargeRequest;
 import com.elefthes.maskswap.dto.request.DeleteVideoRequest;
 import com.elefthes.maskswap.dto.request.GetAmountRequest;
@@ -20,6 +21,7 @@ import com.elefthes.maskswap.util.StatusCode;
 import com.elefthes.maskswap.util.StreamConverter;
 import com.elefthes.maskswap.util.VirusChecker;
 import com.google.gson.Gson;
+import com.stripe.model.Charge;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -190,6 +192,10 @@ public class Conversion {
                 logger.info("トークンが存在しません");
                 throw new CustomException(StatusCode.NeedLogin);
             }
+            //すでに支払いを受けていないかチェック
+            if(chargeService.isAlreadyPaid(requestData.getOrderId()) == true) {
+                throw new CustomException(StatusCode.AlreadyPaid);
+            }
             
             /*if(requestData.getPlan() == 0) {
                 throw new CustomException(StatusCode.NoPlan);
@@ -270,6 +276,10 @@ public class Conversion {
                 logger.info("トークンが存在しません");
                 throw new CustomException(StatusCode.NeedLogin);
             }
+            //すでに支払いを受けていないかチェック
+            if(chargeService.isAlreadyPaid(orderId) == true) {
+                throw new CustomException(StatusCode.AlreadyPaid);
+            }
             
             //データチェック
             if(originSrcFile == null) {
@@ -277,7 +287,8 @@ public class Conversion {
                 throw new CustomException(StatusCode.NoSrcVideo);
             }
             if(duration == 0) {
-                logger.info("durationが0す");
+                logger.info("durationが0です");
+                throw new CustomException(StatusCode.NoDuration);
             }
             
             if(orderService.getOrderByOrderId(orderId).getSrcStorage() != 0) {
@@ -333,6 +344,10 @@ public class Conversion {
                 logger.info("トークンが存在しません");
                 throw new CustomException(StatusCode.NeedLogin);
             }
+            //すでに支払いを受けていないかチェック
+            if(chargeService.isAlreadyPaid(orderId) == true) {
+                throw new CustomException(StatusCode.AlreadyPaid);
+            }
             
             //データチェック
             if(originDstFile == null) {
@@ -341,6 +356,7 @@ public class Conversion {
             }
             if(duration == 0) {
                 logger.info("durationが0です");
+                throw new CustomException(StatusCode.NoDuration);
             }
             
             if(orderService.getOrderByOrderId(orderId).getDstStorage() != 0) {
@@ -395,6 +411,10 @@ public class Conversion {
                 logger.info("トークンが存在しません");
                 throw new CustomException(StatusCode.NeedLogin);
             }
+            //すでに支払いを受けていないかチェック
+            if(chargeService.isAlreadyPaid(orderId) == true) {
+                throw new CustomException(StatusCode.AlreadyPaid);
+            }
             
             //データチェック
             if(originSrcImage == null) {
@@ -403,7 +423,8 @@ public class Conversion {
             }
             
             if(orderService.getOrderByOrderId(orderId).getSrcFaceStorage() != 0) {
-                throw new CustomException(StatusCode.ImageAlreadyExist);
+                orderService.deleteSrcImage(orderId);
+                //throw new CustomException(StatusCode.ImageAlreadyExist);
             }
             
             orderService.uploadSrcImage(originSrcImage, orderId);
@@ -450,6 +471,10 @@ public class Conversion {
                 logger.info("トークンが存在しません");
                 throw new CustomException(StatusCode.NeedLogin);
             }
+            //すでに支払いを受けていないかチェック
+            if(chargeService.isAlreadyPaid(orderId) == true) {
+                throw new CustomException(StatusCode.AlreadyPaid);
+            }
             
             //データチェック
             if(originDstImage == null) {
@@ -458,7 +483,8 @@ public class Conversion {
             }
             
             if(orderService.getOrderByOrderId(orderId).getDstFaceStorage() != 0) {
-                throw new CustomException(StatusCode.ImageAlreadyExist);
+                orderService.deleteDstImage(orderId);
+                //throw new CustomException(StatusCode.ImageAlreadyExist);
             }
             
             orderService.uploadDstImage(originDstImage, orderId);
@@ -501,6 +527,10 @@ public class Conversion {
                 logger.info("トークンが存在しません");
                 throw new CustomException(StatusCode.NeedLogin);
             }
+            //すでに支払いを受けていないかチェック
+            if(chargeService.isAlreadyPaid(requestData.getOrderId()) == true) {
+                throw new CustomException(StatusCode.AlreadyPaid);
+            }
             
             orderService.deleteSrcFile(requestData.getOrderId());
             responseData.setResult(StatusCode.Success);
@@ -534,6 +564,10 @@ public class Conversion {
             if(!(session.getAttribute("token").equals(requestData.getToken()))){
                 logger.info("トークンが存在しません");
                 throw new CustomException(StatusCode.NeedLogin);
+            }
+            //すでに支払いを受けていないかチェック
+            if(chargeService.isAlreadyPaid(requestData.getOrderId()) == true) {
+                throw new CustomException(StatusCode.AlreadyPaid);
             }
             
             orderService.deleteDstFile(requestData.getOrderId());
@@ -569,8 +603,84 @@ public class Conversion {
                 logger.info("トークンが存在しません");
                 throw new CustomException(StatusCode.NeedLogin);
             }
+            //依頼が完成しているかチェック
+            if(orderService.isCompleted(requestData.getOrderId()) == false) {
+                throw new CustomException(StatusCode.IncompleteOrder);
+            }
             
-            chargeService.payment(requestData.getOrderId(), requestData.getStripeToken());
+            //支払い処理
+            long orderId = requestData.getOrderId();
+            String stripeToken = requestData.getStripeToken();
+            if(chargeService.isAlreadyPaid(orderId) == false) {
+                //支払いを作成
+                Charge charge = chargeService.createCharge(orderId, stripeToken);
+                //データベースに支払いIDを書き込み
+                try {
+                    chargeService.addChargeToDataBase(orderId, charge.getId());
+                } catch(RuntimeException e) {
+                    e.printStackTrace();
+                    throw new CustomException(StatusCode.PaymentFailure);
+                }
+                //支払いを実行
+                chargeService.captureCharge(orderId, charge);
+                //データベースに反映
+                try {
+                    chargeService.completePayment(orderId);
+                } catch(RuntimeException e) {
+                    e.printStackTrace();
+                    throw new CustomException(StatusCode.PaymentDataBaseFailure);
+                }
+            } else {
+                throw new CustomException(StatusCode.AlreadyPaid);
+            }
+            
+            //chargeService.payment(requestData.getOrderId(), requestData.getStripeToken());
+            responseData.setResult(StatusCode.Success);
+        } catch(CustomException e) {
+            responseData.setResult(e.getCode());
+            e.printStackTrace();
+        } catch(RuntimeException e) {
+            responseData.setResult(StatusCode.Failure);
+            e.printStackTrace();
+        }
+        
+        return gson.toJson(responseData);
+    }
+    
+    @POST
+    @Path("order/complete/free")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String completeFreeOrder(CompleteFreeOrderRequest requestData, @Context HttpServletRequest req) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
+        StatusResponse responseData = new StatusResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //トークンチェック
+            HttpSession session = req.getSession(false);
+            if(session == null) {
+                logger.info("セッションが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            if(!(session.getAttribute("token").equals(requestData.getToken()))){
+                logger.info("トークンが存在しません");
+                throw new CustomException(StatusCode.NeedLogin);
+            }
+            //依頼が完成しているかチェック
+            if(orderService.isCompleted(requestData.getOrderId()) == false) {
+                throw new CustomException(StatusCode.IncompleteOrder);
+            }
+            //データチェック
+            if(requestData.getOrderId() == 0) {
+                throw new CustomException(StatusCode.Failure);
+            }
+            //値段が0円かどうかチェック
+            if(orderService.getAmount(requestData.getOrderId()) != 0) {
+                throw new CustomException(StatusCode.Failure);
+            }
+            
+            chargeService.completePayment(requestData.getOrderId());
             responseData.setResult(StatusCode.Success);
         } catch(CustomException e) {
             responseData.setResult(e.getCode());

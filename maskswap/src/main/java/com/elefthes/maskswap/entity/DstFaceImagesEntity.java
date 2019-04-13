@@ -11,7 +11,8 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "dst_face_images")
 @NamedQueries({
-    @NamedQuery(name = "DstFaceImages.byId", query = "SELECT d FROM DstFaceImagesEntity d WHERE d.orderId = :orderId AND d.storageOrder = :storage")
+    @NamedQuery(name = "DstFaceImages.byId", query = "SELECT d FROM DstFaceImagesEntity d WHERE d.orderId = :orderId AND d.storageOrder = :storage"),
+    @NamedQuery(name = "DstFaceImages.deleteById", query = "DELETE FROM DstFaceImagesEntity d WHERE d.orderId = :orderId")
 })
 public class DstFaceImagesEntity implements Serializable{
     private static final long serialVersionUID = 1L;

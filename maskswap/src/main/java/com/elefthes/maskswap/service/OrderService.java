@@ -2,9 +2,11 @@ package com.elefthes.maskswap.service;
 
 import com.elefthes.maskswap.dto.request.OrderConversionRequest;
 import com.elefthes.maskswap.entity.ChargesEntity;
+import com.elefthes.maskswap.entity.DstFaceImagesEntity;
 import com.elefthes.maskswap.entity.OrderDstVideosEntity;
 import com.elefthes.maskswap.entity.OrderSrcVideosEntity;
 import com.elefthes.maskswap.entity.OrdersEntity;
+import com.elefthes.maskswap.entity.SrcFaceImagesEntity;
 import com.elefthes.maskswap.exception.CustomException;
 import com.elefthes.maskswap.util.AdminStatusCode;
 import com.elefthes.maskswap.util.DateFormatter;
@@ -52,7 +54,14 @@ public class OrderService {
     FaceImageService faceImageService;
     
     
-    
+    public boolean isCompleted(long orderId) {
+        OrdersEntity order = this.getOrderByOrderId(orderId);
+        if(order.getDstStorage() != 0 && order.getSrcStorage() != 0 && order.getTypeId() != null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     
     public List<OrdersEntity> getOrders(long userId) {
         List<OrdersEntity> result = entityManager.createNamedQuery("Orders.byUserId", OrdersEntity.class)
@@ -239,6 +248,28 @@ public class OrderService {
                         .executeUpdate();
         OrdersEntity order = this.getOrderByOrderId(orderId);
         order.setDstStorage(0);
+        entityManager.persist(order);
+        entityManager.flush();
+    }
+    
+    @Transactional
+    public void deleteSrcImage(long orderId) {
+        entityManager.createNamedQuery("SrcFaceImages.deleteById", SrcFaceImagesEntity.class)
+                        .setParameter("orderId", orderId)
+                        .executeUpdate();
+        OrdersEntity order = this.getOrderByOrderId(orderId);
+        order.setSrcFaceStorage(0);
+        entityManager.persist(order);
+        entityManager.flush();
+    }
+    
+    @Transactional
+    public void deleteDstImage(long orderId) {
+        entityManager.createNamedQuery("DstFaceImages.deleteById", DstFaceImagesEntity.class)
+                        .setParameter("orderId", orderId)
+                        .executeUpdate();
+        OrdersEntity order = this.getOrderByOrderId(orderId);
+        order.setSrcFaceStorage(0);
         entityManager.persist(order);
         entityManager.flush();
     }

@@ -31,7 +31,8 @@ public enum StatusCode {
     AlreadyPaid(27),
     NoSrcImage(28),
     NoDstImage(29),
-    ImageAlreadyExist(30);
+    ImageAlreadyExist(30),
+    NoDuration(31);
     
     
     

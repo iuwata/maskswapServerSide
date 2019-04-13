@@ -64,7 +64,7 @@ public class FindOrder {
                 Timestamp endTimestamp = order.getEndDate();
                 if(endTimestamp != null) {
                     Date endDate = new Date(order.getEndDate().getTime());
-                    orderData.setEndDate(DateFormatter.convert(endDate));
+                    orderData.setEndDate(DateFormatter.convertSlash(endDate));
                 }
                 responseData.getOrders().add(orderData);
             }

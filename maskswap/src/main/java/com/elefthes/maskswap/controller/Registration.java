@@ -57,7 +57,7 @@ public class Registration {
             StringBuilder mailText = new StringBuilder();
             mailText.append("MaskSwapアカウントにご登録ありがとうございます。下記のURLよりメールアドレスの認証をお願いいたします。");
             mailText.append("\r\n");
-            mailText.append("http://");
+            mailText.append("https://");
             sendMail.send(email, "MaskSwapメールアドレス認証", mailText.toString());
             logger.info("Rigistration.P3");
             responseData.setResult(StatusCode.Success);

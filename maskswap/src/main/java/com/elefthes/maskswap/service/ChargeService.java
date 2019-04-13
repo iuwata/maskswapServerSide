@@ -33,7 +33,7 @@ public class ChargeService {
     @Inject
     OrderService orderService;
     
-    private static final String API_KEY = "sk_test_4eC39HqLyjWDarjtT1zdp7dc";
+    private static final String API_KEY = "sk_test_nRuEveFzfu5Vjl34uYllES34001aRYCLjc";
     
     public List<ChargesEntity> getCharges(long orderId) {
         List<ChargesEntity> result = entityManager.createNamedQuery("Charges.byOrderId", ChargesEntity.class)
@@ -89,6 +89,7 @@ public class ChargeService {
         return false;
     }
     
+    /*
     public void payment(long orderId, String stripeToken) {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.ChargeService.payment");
         
@@ -98,32 +99,15 @@ public class ChargeService {
         } else { 
             throw new CustomException(StatusCode.AlreadyPaid);
         }
-    }
+    }*/
     
-    @Transactional
-    public void addChargeToDataBase(long orderId, String chargeId) {
-        OrdersEntity order = orderService.getOrderByOrderId(orderId);
-
-            ChargesEntity chargeEntity;
-
-            List<ChargesEntity> result = this.getCharges(orderId);
-            if(result.size() == 0) {
-                chargeEntity =  new ChargesEntity();
-                chargeEntity.setOrderId(orderId);
-                chargeEntity.setUserId(order.getUserId());
-            } else {
-                chargeEntity = result.get(0);
-            }
-
-            chargeEntity.setChargeId(chargeId);
-            entityManager.persist(chargeEntity);
-            entityManager.flush();
-    }
     
     //@Transactional
     public Charge createCharge(long orderId, String stripeToken) {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.ChargeService.createCharge");
         Stripe.apiKey = API_KEY;
+        
+        logger.info("ストライプトークン : " + stripeToken);
         
         Map<String, Object> chargeParams = new HashMap<>();
         chargeParams.put("amount", orderService.getAmount(orderId));
@@ -138,51 +122,72 @@ public class ChargeService {
         } catch(CardException e) {
             logger.info(e.getCode());
             logger.info(e.getMessage());
-            this.refund(orderId, charge);
+            //this.refund(orderId, charge);
             throw new CustomException(StatusCode.PaymentFailure);
         } catch(RateLimitException e) {
-            this.refund(orderId, charge);
+            //this.refund(orderId, charge);
+            e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
         } catch(InvalidRequestException e) {
-            this.refund(orderId, charge);
+            //this.refund(orderId, charge);
+            e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
         } catch(AuthenticationException e) {
-            this.refund(orderId, charge);
+            //this.refund(orderId, charge);
+            e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
         } catch(ApiConnectionException e) {
-            this.refund(orderId, charge);
+            //this.refund(orderId, charge);
+            e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
         } catch(StripeException e) {
-            this.refund(orderId, charge);
+            //this.refund(orderId, charge);
+            e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
-        } catch(RuntimeException e) {
-            throw new CustomException(StatusCode.PaymentFailure);
-        }
-        
-        try {
-            /*OrdersEntity order = orderService.getOrderByOrderId(orderId);
-
-            ChargesEntity chargeEntity;
-
-            List<ChargesEntity> result = this.getCharges(orderId);
-            if(result.size() == 0) {
-                chargeEntity =  new ChargesEntity();
-                chargeEntity.setOrderId(orderId);
-                chargeEntity.setUserId(order.getUserId());
-            } else {
-                chargeEntity = result.get(0);
-            }
-
-            chargeEntity.setChargeId(charge.getId());
-            entityManager.persist(chargeEntity);
-            entityManager.flush();*/
-            this.addChargeToDataBase(orderId, charge.getId());
         } catch(RuntimeException e) {
             e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
         }
+        /*
+        try {
+            this.addChargeToDataBase(orderId, charge.getId());
+        } catch(RuntimeException e) {
+            e.printStackTrace();
+            throw new CustomException(StatusCode.PaymentFailure);
+        }*/
         
         return charge;
+    }
+    
+    
+    @Transactional
+    public void addChargeToDataBase(long orderId, String chargeId) {
+            Logger logger = Logger.getLogger("com.elefthes.maskswap.service.ChargeService");
+            OrdersEntity order = orderService.getOrderByOrderId(orderId);
+
+        try {
+            List<ChargesEntity> result = this.getCharges(orderId);
+            
+            ChargesEntity chargeEntity;
+            logger.info("支払い追跡1");
+
+            if(result.isEmpty()) {
+                logger.info("支払い追跡2");
+                chargeEntity =  new ChargesEntity();
+                chargeEntity.setOrderId(orderId);
+                chargeEntity.setUserId(order.getUserId());
+            } else {
+                logger.info("支払い追跡3");
+                chargeEntity = result.get(0);
+            }
+            logger.info("支払い追跡4");
+            logger.info("チャージID : " + chargeId);
+            chargeEntity.setChargeId(chargeId);
+            entityManager.persist(chargeEntity);
+            entityManager.flush();
+        } catch(RuntimeException e) {
+            e.printStackTrace();
+        }
     }
     
     //@Transactional
@@ -197,40 +202,41 @@ public class ChargeService {
             logger.info(e.getCode());
             logger.info(e.getMessage());
             this.refund(orderId, charge);
+            e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
         } catch(RateLimitException e) {
             this.refund(orderId, charge);
+            e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
         } catch(InvalidRequestException e) {
             this.refund(orderId, charge);
+            e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
         } catch(AuthenticationException e) {
             this.refund(orderId, charge);
+            e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
         } catch(ApiConnectionException e) {
             this.refund(orderId, charge);
+            e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
         } catch(StripeException e) {
             this.refund(orderId, charge);
+            e.printStackTrace();
             throw new CustomException(StatusCode.PaymentFailure);
         }
         
-        try {
-            /*OrdersEntity order = orderService.getOrderByOrderId(orderId);
-        
-            order.setPaymentDate(new Timestamp(System.currentTimeMillis()));
-            entityManager.persist(orderId);
-            entityManager.flush();*/
+        /*try {
             this.completePayment(orderId);
         } catch(RuntimeException e) {
             throw new CustomException(StatusCode.PaymentDataBaseFailure);
-        }
+        }*/
     }
     
     @Transactional
-    private void completePayment(long orderId) {
+    public void completePayment(long orderId) {
         OrdersEntity order = orderService.getOrderByOrderId(orderId);
-        
+
         order.setPaymentDate(new Timestamp(System.currentTimeMillis()));
         entityManager.persist(orderId);
         entityManager.flush();
@@ -253,10 +259,15 @@ public class ChargeService {
             logger.info(e.getCode());
             logger.info(e.getMessage());
         } catch(RateLimitException e) {
+            e.printStackTrace();
         } catch(InvalidRequestException e) {
+            e.printStackTrace();
         } catch(AuthenticationException e) {
+            e.printStackTrace();
         } catch(ApiConnectionException e) {
+            e.printStackTrace();
         } catch(StripeException e) {
+            e.printStackTrace();
         }
         
         /*OrdersEntity order = orderService.getOrderByOrderId(orderId);
