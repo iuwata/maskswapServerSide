@@ -4,6 +4,7 @@ import com.elefthes.maskswap.dto.request.CompleteFreeOrderRequest;
 import com.elefthes.maskswap.dto.request.CreateChargeRequest;
 import com.elefthes.maskswap.dto.request.DeleteVideoRequest;
 import com.elefthes.maskswap.dto.request.GetAmountRequest;
+import com.elefthes.maskswap.dto.request.GetCompleteVideoRequest;
 import com.elefthes.maskswap.dto.request.OrderConversionRequest;
 import com.elefthes.maskswap.dto.request.RequestWithToken;
 import com.elefthes.maskswap.dto.request.SetPlanRequest;
@@ -14,9 +15,11 @@ import com.elefthes.maskswap.dto.response.SetPlanResponse;
 import com.elefthes.maskswap.dto.response.StatusResponse;
 import com.elefthes.maskswap.entity.OrdersEntity;
 import com.elefthes.maskswap.exception.CustomException;
+import com.elefthes.maskswap.service.AdminService;
 import com.elefthes.maskswap.service.ChargeService;
 import com.elefthes.maskswap.service.OrderService;
 import com.elefthes.maskswap.service.OrderVideoService;
+import com.elefthes.maskswap.service.VideoStreamingOutput;
 import com.elefthes.maskswap.util.StatusCode;
 import com.elefthes.maskswap.util.StreamConverter;
 import com.elefthes.maskswap.util.VirusChecker;
@@ -37,6 +40,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 @ApplicationScoped
@@ -47,6 +52,13 @@ public class Conversion {
     
     @Inject
     ChargeService chargeService;
+    
+    @Inject
+    OrderVideoService orderVideoService;
+    
+    //テスト用
+    //@Inject
+    //AdminService adminService;
     
     @POST
     @Path("order/status")
@@ -299,6 +311,7 @@ public class Conversion {
             
             srcFile = StreamConverter.getInputStreamDeleteOnClose(srcTmpFile);
             
+            //adminService.uploadCompletedVideo(srcFile, orderId);
             orderService.uploadSrcVideo(srcFile, orderId, duration);
             responseData.setResult(StatusCode.Success);
         } catch(IOException e) {
@@ -487,6 +500,7 @@ public class Conversion {
                 //throw new CustomException(StatusCode.ImageAlreadyExist);
             }
             
+            
             orderService.uploadDstImage(originDstImage, orderId);
             responseData.setResult(StatusCode.Success);
         } catch(IOException e) {
@@ -625,7 +639,7 @@ public class Conversion {
                 chargeService.captureCharge(orderId, charge);
                 //データベースに反映
                 try {
-                    chargeService.completePayment(orderId);
+                    chargeService.completePayment(orderService.getOrderByOrderId(orderId));
                 } catch(RuntimeException e) {
                     e.printStackTrace();
                     throw new CustomException(StatusCode.PaymentDataBaseFailure);
@@ -680,7 +694,7 @@ public class Conversion {
                 throw new CustomException(StatusCode.Failure);
             }
             
-            chargeService.completePayment(requestData.getOrderId());
+            chargeService.completePayment(orderService.getOrderByOrderId(requestData.getOrderId()));
             responseData.setResult(StatusCode.Success);
         } catch(CustomException e) {
             responseData.setResult(e.getCode());
@@ -691,5 +705,35 @@ public class Conversion {
         }
         
         return gson.toJson(responseData);
+    }
+    
+    @POST
+    @Path("download/complete-video")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces("video/mp4")
+    public Response getCompleteVideo(GetCompleteVideoRequest requestData, @Context HttpServletRequest req) throws IOException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
+
+        //トークンチェック
+        HttpSession session = req.getSession(false);
+        if(session == null) {
+            logger.info("セッションが存在しません");
+            throw new CustomException(StatusCode.NeedLogin);
+        }
+        if(!(session.getAttribute("token").equals(requestData.getToken()))){
+            logger.info("トークンが存在しません");
+            throw new CustomException(StatusCode.NeedLogin);
+        }
+        
+        long orderId = requestData.getOrderId();
+        OrdersEntity order = orderService.getOrderByOrderId(orderId);
+        if(order.getEndDate() != null) {
+            int storage = order.getCompletedStorage();
+            InputStream is = orderVideoService.getCompleteVideo(orderId, storage);
+            StreamingOutput fileStream = new VideoStreamingOutput(orderId, is);
+            return Response.ok(fileStream).build();
+        } else {
+            throw new CustomException(StatusCode.Failure);
+        }
     }
 }

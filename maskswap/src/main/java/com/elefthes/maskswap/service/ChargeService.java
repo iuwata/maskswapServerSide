@@ -52,6 +52,7 @@ public class ChargeService {
     public boolean isAlreadyPaid(long orderId) {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.ChargeService.isAlreadyPaid");
         OrdersEntity order = orderService.getOrderByOrderId(orderId);
+        Stripe.apiKey = API_KEY;
         if(order.getPaymentDate() != null) {
             //支払い処理完了
             return true;
@@ -69,18 +70,22 @@ public class ChargeService {
                             return true;
                         }
                     } catch(CardException e) {
-                        logger.info(e.getCode());
-                        logger.info(e.getMessage());
+                        e.printStackTrace();
                         throw new CustomException(StatusCode.CheckPaymentFailure);
                     } catch(RateLimitException e) {
+                        e.printStackTrace();
                         throw new CustomException(StatusCode.CheckPaymentFailure);
                     } catch(InvalidRequestException e) {
+                        e.printStackTrace();
                         throw new CustomException(StatusCode.CheckPaymentFailure);
                     } catch(AuthenticationException e) {
+                        e.printStackTrace();
                         throw new CustomException(StatusCode.CheckPaymentFailure);
                     } catch(ApiConnectionException e) {
+                        e.printStackTrace();
                         throw new CustomException(StatusCode.CheckPaymentFailure);
                     } catch(StripeException e) {
+                        e.printStackTrace();
                         throw new CustomException(StatusCode.CheckPaymentFailure);
                     }
                 }
@@ -234,12 +239,17 @@ public class ChargeService {
     }
     
     @Transactional
-    public void completePayment(long orderId) {
-        OrdersEntity order = orderService.getOrderByOrderId(orderId);
-
+    public void completePayment(OrdersEntity order) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.service.ChargeService.completePayment");
+        logger.info("呼び出し1");
+        //OrdersEntity order = orderService.getOrderByOrderId(orderId);
+        
         order.setPaymentDate(new Timestamp(System.currentTimeMillis()));
-        entityManager.persist(orderId);
+        logger.info("呼び出し2");
+        entityManager.persist(order);
+        logger.info("呼び出し3");
         entityManager.flush();
+        logger.info("呼び出し4");
     }
     
     @Transactional

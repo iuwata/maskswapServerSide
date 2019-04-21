@@ -112,7 +112,7 @@ public class Control {
         long orderId = requestData.getOrderId();
         int storage = orderService.getOrderByOrderId(orderId).getDstStorage();
         InputStream is = orderVideoService.getDstVideo(orderId, storage);
-        StreamingOutput fileStream = new VideoStreamingOutput(requestData.getOrderId(), is);
+        StreamingOutput fileStream = new VideoStreamingOutput(orderId, is);
         
         return Response.ok(fileStream).build();
     }
@@ -133,7 +133,7 @@ public class Control {
         long orderId = requestData.getOrderId();
         int storage = orderService.getOrderByOrderId(orderId).getSrcStorage();
         InputStream is = orderVideoService.getSrcVideo(orderId, storage);
-        StreamingOutput fileStream = new VideoStreamingOutput(requestData.getOrderId(), is);
+        StreamingOutput fileStream = new VideoStreamingOutput(orderId, is);
         
         return Response.ok(fileStream).build();
     }
@@ -256,7 +256,7 @@ public class Control {
             }
             
             completedVideo = StreamConverter.getInputStreamDeleteOnClose(tmpFile);
-            adminService.uploadCompletedVide(completedVideo, orderId);
+            adminService.uploadCompletedVideo(completedVideo, orderId);
             responseData.setResult(AdminStatusCode.Success);
         } catch(AdminCustomException e) {
             responseData.setResult(e.getCode());

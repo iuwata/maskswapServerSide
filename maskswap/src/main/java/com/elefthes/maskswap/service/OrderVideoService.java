@@ -1,5 +1,6 @@
 package com.elefthes.maskswap.service;
 
+import com.elefthes.maskswap.entity.CompletedVideosEntity;
 import com.elefthes.maskswap.entity.OrderDstVideosEntity;
 import com.elefthes.maskswap.entity.OrderSrcVideosEntity;
 import com.elefthes.maskswap.exception.CustomException;
@@ -32,7 +33,7 @@ public class OrderVideoService {
     @PersistenceContext(unitName = "maskswapGeneral")
     private EntityManager entityManager;  
     
-    //@Transactional
+    @Transactional
     public InputStream getSrcVideo(long orderId, int storage) throws IOException {
         Path tmpPath = Files.createTempFile(Paths.get(System.getProperty("java.io.tmpdir"), "maskswap"), null, null);
         OutputStream os = Files.newOutputStream(tmpPath);
@@ -53,7 +54,7 @@ public class OrderVideoService {
         return Files.newInputStream(tmpPath, StandardOpenOption.DELETE_ON_CLOSE);
     }
     
-    //@Transactional
+    @Transactional
     public InputStream getDstVideo(long orderId, int storage) throws IOException {
         Path tmpPath = Files.createTempFile(Paths.get(System.getProperty("java.io.tmpdir"), "maskswap"), null, null);
         OutputStream os = Files.newOutputStream(tmpPath);
@@ -69,6 +70,32 @@ public class OrderVideoService {
             
             entityManager.detach(video);
         }
+        bos.close();
+        
+        return Files.newInputStream(tmpPath, StandardOpenOption.DELETE_ON_CLOSE);
+    }
+    
+    @Transactional
+    public InputStream getCompleteVideo(long orderId, int storage) throws IOException {
+        Path tmpPath = Files.createTempFile(Paths.get(System.getProperty("java.io.tmpdir"), "maskswap"), null, null);
+        OutputStream os = Files.newOutputStream(tmpPath);
+        BufferedOutputStream bos = new BufferedOutputStream(os, 1024 * 128);
+        
+        //try {
+        for(int i = 0; i < storage; i++) {
+            CompletedVideosEntity video = entityManager.createNamedQuery("CompletedVideosEntity.byId", CompletedVideosEntity.class)
+                                                    .setParameter("orderId", orderId)
+                                                    .setParameter("storageOrder", i)
+                                                    .getSingleResult();
+            bos.write(video.getVideo());
+            bos.flush();
+            
+            entityManager.detach(video);
+        }
+            
+        //} catch(RuntimeException e) {
+        //    e.printStackTrace();
+        //}
         bos.close();
         
         return Files.newInputStream(tmpPath, StandardOpenOption.DELETE_ON_CLOSE);

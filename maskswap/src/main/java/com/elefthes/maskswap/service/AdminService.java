@@ -9,6 +9,7 @@ import com.elefthes.maskswap.util.SafePassword;
 import com.elefthes.maskswap.util.StreamConverter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Timestamp;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -56,7 +57,7 @@ public class AdminService {
     }
     
     @Transactional
-    public void uploadCompletedVide(InputStream completedVideo, long orderId) throws IOException {
+    public void uploadCompletedVideo(InputStream completedVideo, long orderId) throws IOException {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.AdminService");
         
         OrdersEntity order = orderService.getOrderByOrderId(orderId);
@@ -87,6 +88,9 @@ public class AdminService {
         }
         
         order.setCompletedStorage(i + 1);
+        
+        order.setEndDate(new Timestamp(System.currentTimeMillis()));
+        
         entityManager.persist(order);
         entityManager.flush();
     }

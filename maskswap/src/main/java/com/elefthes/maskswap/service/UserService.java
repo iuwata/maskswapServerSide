@@ -9,10 +9,13 @@ import com.elefthes.maskswap.util.StatusCode;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.transaction.Transactional;
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -48,8 +51,11 @@ public class UserService {
         entityManager.flush();
     }
     
+    
+    
     //@Transactional
     public void authenticateEmail(long userId, String authenticationCode) throws CustomException{
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.service.UserService.authenticateEmail");
         UsersEntity user = this.getUser(userId);
         
         //認証済みかどうかを確認
@@ -57,18 +63,21 @@ public class UserService {
             throw new CustomException(StatusCode.EmailAlreadyAuthenticated);
         }
         
-        int limitDay = 1; //認証期限(日)
+        /*int limitDay = 1; //認証期限(日)
         //認証制限を確認
         if((user.getStart_date().getTime() - System.currentTimeMillis()) > (limitDay * 24 * 60 * 60 * 1000)) {
             throw new CustomException(StatusCode.EmailAuthenticationExpired);
-        }
+        }*/
         
         //認証コードを確認
-        if(user.getAuthenticationCode() == authenticationCode) {
-            this.authenticate(user);
-        } else {
+        logger.info(user.getAuthenticationCode());
+        logger.info("送信された認証コード" + authenticationCode);
+        if(!user.getAuthenticationCode().equals(authenticationCode)) {
+            //this.authenticate(user);
             throw new CustomException(StatusCode.IncorrectAuthenticationCode);
-        }
+        }/* else {
+            throw new CustomException(StatusCode.IncorrectAuthenticationCode);
+        }*/
     }
     
     public StatusCode EmailAvailable(String email) {
@@ -90,7 +99,11 @@ public class UserService {
             UsersEntity result = entityManager.createNamedQuery("Users.byEmail", UsersEntity.class)
                                                     .setParameter("email", email).getSingleResult();
             if(SafePassword.getStretchedPassword(password, result.getSalt()).equals(result.getPassword())) {
-                return true;
+                if(result.getAuthentication() == true) {
+                    return true;
+                } else {
+                    return false;
+                }
             } else {
                 return false;
             }
