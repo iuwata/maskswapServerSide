@@ -41,11 +41,15 @@ public class AdminService {
     }
     
     public int getTypeId(String email) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.service.AdminService.getTypeId");
+        logger.info("補足１ : " + email);
         AdminsEntity result = entityManager.createNamedQuery("Admins.byEmail", AdminsEntity.class)
                                         .setParameter("email", email).getSingleResult();
+        
         if(result.getTypeId() == null) {
             throw new AdminCustomException(AdminStatusCode.Failure);
         }
+        logger.info("補足２ : " + result.getTypeId());
         return result.getTypeId();
     }
 

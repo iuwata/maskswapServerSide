@@ -239,11 +239,12 @@ public class ChargeService {
     }
     
     @Transactional
-    public void completePayment(OrdersEntity order) {
+    public void completePayment(long orderId) {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.service.ChargeService.completePayment");
         logger.info("呼び出し1");
         //OrdersEntity order = orderService.getOrderByOrderId(orderId);
         
+        OrdersEntity order = orderService.getOrderByOrderId(orderId);
         order.setPaymentDate(new Timestamp(System.currentTimeMillis()));
         logger.info("呼び出し2");
         entityManager.persist(order);

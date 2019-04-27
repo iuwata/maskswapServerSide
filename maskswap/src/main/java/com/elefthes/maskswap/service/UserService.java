@@ -32,6 +32,7 @@ public class UserService {
         return result;
     }
     
+    @Transactional
     public UsersEntity getUser(long userId) { 
         UsersEntity result = entityManager.createNamedQuery("Users.byId", UsersEntity.class)
                                     .setParameter("userId", userId).getSingleResult();
@@ -45,7 +46,8 @@ public class UserService {
     }
     
     @Transactional
-    public void authenticate(UsersEntity user) {
+    public void authenticate(long userId) {
+        UsersEntity user = this.getUser(userId);
         user.setAuthentication(true);
         entityManager.persist(user);
         entityManager.flush();
@@ -63,21 +65,13 @@ public class UserService {
             throw new CustomException(StatusCode.EmailAlreadyAuthenticated);
         }
         
-        /*int limitDay = 1; //認証期限(日)
-        //認証制限を確認
-        if((user.getStart_date().getTime() - System.currentTimeMillis()) > (limitDay * 24 * 60 * 60 * 1000)) {
-            throw new CustomException(StatusCode.EmailAuthenticationExpired);
-        }*/
-        
         //認証コードを確認
         logger.info(user.getAuthenticationCode());
         logger.info("送信された認証コード" + authenticationCode);
         if(!user.getAuthenticationCode().equals(authenticationCode)) {
             //this.authenticate(user);
             throw new CustomException(StatusCode.IncorrectAuthenticationCode);
-        }/* else {
-            throw new CustomException(StatusCode.IncorrectAuthenticationCode);
-        }*/
+        }
     }
     
     public StatusCode EmailAvailable(String email) {

@@ -121,8 +121,7 @@ public class Conversion {
                             responseData.setSrcDuration(order.getSrcDuration());
                             return gson.toJson(responseData);
                         }
-                    }
-                    
+                    } 
                 }
             }
             responseData.setResult(StatusCode.CompleteOrder);
@@ -639,7 +638,7 @@ public class Conversion {
                 chargeService.captureCharge(orderId, charge);
                 //データベースに反映
                 try {
-                    chargeService.completePayment(orderService.getOrderByOrderId(orderId));
+                    chargeService.completePayment(orderId);
                 } catch(RuntimeException e) {
                     e.printStackTrace();
                     throw new CustomException(StatusCode.PaymentDataBaseFailure);
@@ -694,7 +693,7 @@ public class Conversion {
                 throw new CustomException(StatusCode.Failure);
             }
             
-            chargeService.completePayment(orderService.getOrderByOrderId(requestData.getOrderId()));
+            chargeService.completePayment(requestData.getOrderId());
             responseData.setResult(StatusCode.Success);
         } catch(CustomException e) {
             responseData.setResult(e.getCode());

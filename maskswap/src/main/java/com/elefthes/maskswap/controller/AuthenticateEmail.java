@@ -46,7 +46,7 @@ public class AuthenticateEmail {
         
         try {
             userService.authenticateEmail(userId, authenticationCode);
-            userService.authenticate(userService.getUser(userId));
+            userService.authenticate(userId);
             uri = UriBuilder.fromPath(uriStr).queryParam("result", 1).build();
         } catch (CustomException e) {
             uri = UriBuilder.fromPath(uriStr).queryParam("result", e.getCode().getId()).build();

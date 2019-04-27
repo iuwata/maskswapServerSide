@@ -1,33 +1,16 @@
 package com.elefthes.maskswap.service;
 
-import com.elefthes.maskswap.dto.request.OrderConversionRequest;
-import com.elefthes.maskswap.entity.ChargesEntity;
 import com.elefthes.maskswap.entity.DstFaceImagesEntity;
 import com.elefthes.maskswap.entity.OrderDstVideosEntity;
 import com.elefthes.maskswap.entity.OrderSrcVideosEntity;
 import com.elefthes.maskswap.entity.OrdersEntity;
 import com.elefthes.maskswap.entity.SrcFaceImagesEntity;
 import com.elefthes.maskswap.exception.CustomException;
-import com.elefthes.maskswap.util.AdminStatusCode;
-import com.elefthes.maskswap.util.DateFormatter;
 import com.elefthes.maskswap.util.StatusCode;
-import com.stripe.Stripe;
-import com.stripe.exception.ApiConnectionException;
-import com.stripe.exception.AuthenticationException;
-import com.stripe.exception.CardException;
-import com.stripe.exception.InvalidRequestException;
-import com.stripe.exception.RateLimitException;
-import com.stripe.exception.StripeException;
-import com.stripe.model.Charge;
-import com.stripe.model.Refund;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Date;
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -35,9 +18,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPart;
-import org.glassfish.jersey.media.multipart.file.StreamDataBodyPart;
 
 @ApplicationScoped
 public class OrderService {
@@ -77,6 +57,8 @@ public class OrderService {
     
     //@Transactional
     public OrdersEntity getConvertOrder(int typeId) throws IOException, NoResultException {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.service.OrderService.getConvertOrder");
+        logger.info("補足３");
         OrdersEntity result = entityManager.createNamedQuery("Orders.orderById", OrdersEntity.class)
                                         .setParameter("typeId", typeId)
                                         .setFirstResult(0)
@@ -84,6 +66,7 @@ public class OrderService {
         return result;
     }
     
+    @Transactional
     public OrdersEntity getOrderByOrderId(long orderId) {
         OrdersEntity result = entityManager.createNamedQuery("Orders.byOrderId", OrdersEntity.class)
                                         .setParameter("orderId", orderId)
@@ -92,7 +75,8 @@ public class OrderService {
     }
     
     @Transactional
-    public void setConverting(OrdersEntity order) {
+    public void setConverting(long orderId) {
+        OrdersEntity order = this.getOrderByOrderId(orderId);
         order.setIsConverting(true);
         entityManager.persist(order);
         entityManager.flush();

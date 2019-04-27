@@ -3,6 +3,7 @@ package com.elefthes.maskswap.controller;
 import com.elefthes.maskswap.dto.request.FindOrderByAdminRequest;
 import com.elefthes.maskswap.dto.request.GetImageByAdminRequest;
 import com.elefthes.maskswap.dto.request.GetVideoByAdminRequest;
+import com.elefthes.maskswap.dto.request.SetConvertingByAdminRequest;
 import com.elefthes.maskswap.dto.request.UpdateProgressByAdminRequest;
 import com.elefthes.maskswap.dto.response.AdminStatusResponse;
 import com.elefthes.maskswap.dto.response.FindOrderByAdminResponse;
@@ -76,6 +77,7 @@ public class Control {
             }
             
             OrdersEntity order = orderService.getConvertOrder(adminService.getTypeId(requestData.getEmail()));
+            logger.info("補足4");
             String orderDate = DateFormatter.convertSlash(new Date(order.getOrderDate().getTime()));
             int plan = order.getTypeId();
             
@@ -84,7 +86,7 @@ public class Control {
             responseData.setPlan(plan);
             responseData.setResult(AdminStatusCode.Success);
             
-            orderService.setConverting(order);
+            //orderService.setConverting(order.getOrderId());
         } catch(NoResultException e) {
             responseData.setResult(AdminStatusCode.NoOrder);
         } catch(AdminCustomException e) {
@@ -94,6 +96,37 @@ public class Control {
         }
         
         return gson.toJson(responseData);
+    }
+    
+    @POST
+    @Path("AfL3gghex3YA82G94fF9LqGZ")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String setConverting(SetConvertingByAdminRequest requestData) {
+        Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Control.setConverting");
+        logger.info("補足１");
+        AdminStatusResponse responseData = new AdminStatusResponse();
+        Gson gson = new Gson();
+        
+        try {
+            //ログインチェック
+            if(adminService.login(requestData.getEmail(), requestData.getPassword()) == false) {
+                //失敗時の処理
+                //logger.info("アドミンログイン失敗");
+                throw new AdminCustomException(AdminStatusCode.Failure);
+            }
+            if(requestData.getOrderId() == 0) {
+                throw new AdminCustomException(AdminStatusCode.Failure);
+            }
+            
+            orderService.setConverting(requestData.getOrderId());
+            responseData.setResult(AdminStatusCode.Success);
+        } catch(RuntimeException e) {
+            responseData.setResult(AdminStatusCode.Failure);
+        }
+        
+        return gson.toJson(responseData);
+        
     }
     
     @POST
