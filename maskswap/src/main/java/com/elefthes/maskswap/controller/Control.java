@@ -121,7 +121,9 @@ public class Control {
             
             orderService.setConverting(requestData.getOrderId());
             responseData.setResult(AdminStatusCode.Success);
+            logger.info("補足２");
         } catch(RuntimeException e) {
+            logger.info("補足３");
             responseData.setResult(AdminStatusCode.Failure);
         }
         
