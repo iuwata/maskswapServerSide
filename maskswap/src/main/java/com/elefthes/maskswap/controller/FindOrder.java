@@ -66,6 +66,9 @@ public class FindOrder {
                     Date endDate = new Date(order.getEndDate().getTime());
                     orderData.setEndDate(DateFormatter.convertSlash(endDate));
                 }
+                if(order.getPaymentDate() != null) {
+                    orderData.setCompleted(true);
+                }
                 responseData.getOrders().add(orderData);
             }
             responseData.setResult(StatusCode.Success);
