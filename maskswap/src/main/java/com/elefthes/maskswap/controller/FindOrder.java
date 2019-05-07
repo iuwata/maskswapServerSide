@@ -67,7 +67,7 @@ public class FindOrder {
                     orderData.setEndDate(DateFormatter.convertSlash(endDate));
                 }
                 if(order.getPaymentDate() != null) {
-                    orderData.setCompleted(true);
+                    orderData.setCompleted(1);
                 }
                 responseData.getOrders().add(orderData);
             }

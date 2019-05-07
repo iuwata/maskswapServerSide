@@ -5,7 +5,7 @@ public class OrderData {
     private int progress;
     private String orderDate;
     private String endDate;
-    private boolean completed;
+    private int completed;
 
     public long getOrderId() {
         return orderId;
@@ -39,13 +39,12 @@ public class OrderData {
         this.endDate = endDate;
     }
 
-    public boolean isCompleted() {
+    public void setCompleted(int completed) {
+        this.completed = completed;
+    }
+
+    public int getCompleted() {
         return completed;
     }
 
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
-    }
-    
-    
 }
