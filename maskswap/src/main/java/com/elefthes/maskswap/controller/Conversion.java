@@ -35,8 +35,10 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -706,11 +708,13 @@ public class Conversion {
         return gson.toJson(responseData);
     }
     
-    @POST
-    @Path("download/complete-video")
+    @GET
+    @Path("download/complete-video/{token}/{orderId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces("video/mp4")
-    public Response getCompleteVideo(GetCompleteVideoRequest requestData, @Context HttpServletRequest req) throws IOException {
+    //public Response getCompleteVideo(GetCompleteVideoRequest requestData, @Context HttpServletRequest req) throws IOException {
+    public Response getCompleteVideo(@PathParam("token") String token, 
+                                    @PathParam("orderId") long orderId, @Context HttpServletRequest req) throws IOException {
         Logger logger = Logger.getLogger("com.elefthes.maskswap.controller.Conversion");
 
         //トークンチェック
@@ -719,19 +723,20 @@ public class Conversion {
             logger.info("セッションが存在しません");
             throw new CustomException(StatusCode.NeedLogin);
         }
-        if(!(session.getAttribute("token").equals(requestData.getToken()))){
+        if(!(session.getAttribute("token").equals(token))){
             logger.info("トークンが存在しません");
             throw new CustomException(StatusCode.NeedLogin);
         }
         
-        long orderId = requestData.getOrderId();
+        //long orderId = requestData.getOrderId();
         OrdersEntity order = orderService.getOrderByOrderId(orderId);
         if(order.getEndDate() != null) {
             int storage = order.getCompletedStorage();
             InputStream is = orderVideoService.getCompleteVideo(orderId, storage);
             StreamingOutput fileStream = new VideoStreamingOutput(orderId, is);
-            return Response.ok(fileStream).build();
+            return Response.ok(fileStream).header("Content-Disposition", "attachment;filename=\"maskswap.mp4\"").build();
         } else {
+            
             throw new CustomException(StatusCode.Failure);
         }
     }

@@ -43,13 +43,14 @@ public class SendMail {
         props.setProperty("mail.smtps.starttls.enable", "true");
         props.setProperty("mail.debug", "true");*/
         //props.setProperty("mail.smtp.host", "elefthes.com"); //SMTP
-        props.setProperty("mail.smtp.host", "202.172.28.12");
+        //props.setProperty("mail.smtp.host", "202.172.28.12"); 2019/05/28
+        props.setProperty("mail.smtp.host", "localhost");
         //props.setProperty("mail.smtp.host", "smtp.gmail.com");
         props.setProperty("mail.smtp.port", "587"); //SMTPポート
         props.setProperty("mail.smtp.auth", "true"); //認証
         props.setProperty("mail.smtp.connectiontimeout", "10000"); //タイムアウト
         props.setProperty("mail.smtp.timeout", "10000");
-        props.setProperty("mail.smtp.starttls.enable", "true");
+        //props.setProperty("mail.smtp.starttls.enable", "true");
         
         Authenticator auth = new MailAuthenticator();
         
@@ -79,7 +80,8 @@ public class SendMail {
             //message.setSentDate(new Date());
             logger.info("SendMail.P2");
             
-            Transport.send(message, "info@elefthes.com", "vaqVryGUzFHv");
+            //Transport.send(message, "info@elefthes.com", "vaqVryGUzFHv");
+            Transport.send(message, "info", "knzM_xK_2E&/~3WiPU7)K|W.");
             logger.info("SendMail.P3");
         } catch (AuthenticationFailedException e) {
             logger.info("例外1");
